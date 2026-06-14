@@ -15,6 +15,10 @@ import javax.inject.Singleton
 class BackupManager @Inject constructor(
     private val repository: RecipeRepository
 ) {
+    companion object {
+        const val BACKUP_VERSION = 1
+    }
+
     private val json = Json { 
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -23,6 +27,7 @@ class BackupManager @Inject constructor(
     suspend fun exportToJson(): String {
         val recipes = repository.getAllRecipesWithDetails()
         val backupData = BackupData(
+            version = BACKUP_VERSION,
             recipes = recipes.map { recipe ->
                 BackupRecipeDto(
                     title = recipe.recipe.title,
@@ -53,6 +58,12 @@ class BackupManager @Inject constructor(
             ?: throw IllegalStateException("Could not open file")
         val content = inputStream.bufferedReader().use { it.readText() }
         val backupData = json.decodeFromString(BackupData.serializer(), content)
+
+        if (backupData.version > BACKUP_VERSION) {
+            throw IllegalStateException(
+                "Backup version ${backupData.version} is newer than supported version $BACKUP_VERSION"
+            )
+        }
 
         backupData.recipes.forEach { dto ->
             val recipe = RecipeEntity(
