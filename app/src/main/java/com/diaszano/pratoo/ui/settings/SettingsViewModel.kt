@@ -5,11 +5,14 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diaszano.pratoo.data.repository.BackupManager
+import com.diaszano.pratoo.data.settings.AppPreferences
+import com.diaszano.pratoo.data.settings.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -17,16 +20,32 @@ import javax.inject.Inject
 data class SettingsUiState(
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,
-    val message: String? = null
+    val message: String? = null,
+    val themeMode: String = "system",
+    val unitSystem: String = "metric"
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val backupManager: BackupManager
+    private val backupManager: BackupManager,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            appPreferences.themeMode.collect { mode ->
+                _uiState.update { it.copy(themeMode = mode.name.lowercase()) }
+            }
+        }
+        viewModelScope.launch {
+            appPreferences.unitSystem.collect { unit ->
+                _uiState.update { it.copy(unitSystem = unit) }
+            }
+        }
+    }
 
     fun exportToUri(uri: Uri, context: android.content.Context) {
         viewModelScope.launch {
@@ -60,5 +79,23 @@ class SettingsViewModel @Inject constructor(
 
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(message = null)
+    }
+
+    fun onThemeModeChange(mode: String) {
+        viewModelScope.launch {
+            val themeMode = when (mode) {
+                "light" -> ThemeMode.LIGHT
+                "dark" -> ThemeMode.DARK
+                "moonlight" -> ThemeMode.MOONLIGHT
+                else -> ThemeMode.SYSTEM
+            }
+            appPreferences.setThemeMode(themeMode)
+        }
+    }
+
+    fun onUnitSystemChange(unit: String) {
+        viewModelScope.launch {
+            appPreferences.setUnitSystem(unit)
+        }
     }
 }

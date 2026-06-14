@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.diaszano.pratoo.data.local.entity.IngredientEntity
+import com.diaszano.pratoo.data.local.entity.MeasurementUnit
 import com.diaszano.pratoo.data.local.entity.RecipeEntity
 import com.diaszano.pratoo.data.local.entity.StepEntity
 import com.diaszano.pratoo.data.local.entity.TagEntity
@@ -40,11 +41,13 @@ data class RecipeEditUiState(
     val prepTimeMinutes: String = "",
     val cookTimeMinutes: String = "",
     val sourceUrl: String = "",
+    val isFavorite: Boolean = false,
     val ingredients: List<IngredientFormItem> = listOf(IngredientFormItem()),
     val steps: List<StepFormItem> = listOf(StepFormItem()),
     val allTags: List<TagEntity> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
     val newTagName: String = "",
+    val measurementUnits: List<MeasurementUnit> = emptyList(),
     val isSaving: Boolean = false,
     val isLoaded: Boolean = false,
     val titleError: String? = null
@@ -63,9 +66,10 @@ class RecipeEditViewModel @Inject constructor(
 
     val uiState: StateFlow<RecipeEditUiState> = combine(
         _uiState,
-        repository.observeAllTags()
-    ) { state, tags ->
-        state.copy(allTags = tags)
+        repository.observeAllTags(),
+        repository.observeMeasurementUnits()
+    ) { state, tags, units ->
+        state.copy(allTags = tags, measurementUnits = units)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -87,6 +91,7 @@ class RecipeEditViewModel @Inject constructor(
                         prepTimeMinutes = if (recipe.recipe.prepTimeMinutes > 0) recipe.recipe.prepTimeMinutes.toString() else "",
                         cookTimeMinutes = if (recipe.recipe.cookTimeMinutes > 0) recipe.recipe.cookTimeMinutes.toString() else "",
                         sourceUrl = recipe.recipe.sourceUrl ?: "",
+                        isFavorite = recipe.recipe.isFavorite,
                         ingredients = if (recipe.ingredients.isEmpty()) {
                             listOf(IngredientFormItem())
                         } else {
@@ -129,6 +134,14 @@ class RecipeEditViewModel @Inject constructor(
 
     fun onImageSelected(uri: Uri) {
         _uiState.update { it.copy(imageUri = uri.toString()) }
+    }
+
+    fun onSourceUrlChange(url: String) {
+        _uiState.update { it.copy(sourceUrl = url) }
+    }
+
+    fun onToggleFavorite() {
+        _uiState.update { it.copy(isFavorite = !it.isFavorite) }
     }
 
     // Ingredients
@@ -179,6 +192,28 @@ class RecipeEditViewModel @Inject constructor(
         }
     }
 
+    fun onMoveStepUp(index: Int) {
+        if (index <= 0) return
+        _uiState.update {
+            val updated = it.steps.toMutableList()
+            val temp = updated[index]
+            updated[index] = updated[index - 1]
+            updated[index - 1] = temp
+            it.copy(steps = updated)
+        }
+    }
+
+    fun onMoveStepDown(index: Int) {
+        _uiState.update {
+            val updated = it.steps.toMutableList()
+            if (index >= updated.lastIndex) return@update it.copy(steps = updated)
+            val temp = updated[index]
+            updated[index] = updated[index + 1]
+            updated[index + 1] = temp
+            it.copy(steps = updated)
+        }
+    }
+
     // Tags
     fun onToggleTag(tagId: Long) {
         _uiState.update {
@@ -197,8 +232,22 @@ class RecipeEditViewModel @Inject constructor(
         if (name.isBlank()) return
 
         viewModelScope.launch {
-            repository.createTag(name)
-            _uiState.update { it.copy(newTagName = "") }
+            val tagId = repository.createTag(name)
+            _uiState.update {
+                it.copy(
+                    newTagName = "",
+                    selectedTagIds = it.selectedTagIds + tagId
+                )
+            }
+        }
+    }
+
+    fun onDeleteTag(tagId: Long) {
+        viewModelScope.launch {
+            repository.deleteTag(tagId)
+            _uiState.update {
+                it.copy(selectedTagIds = it.selectedTagIds - tagId)
+            }
         }
     }
 
@@ -221,6 +270,7 @@ class RecipeEditViewModel @Inject constructor(
             prepTimeMinutes = state.prepTimeMinutes.toIntOrNull() ?: 0,
             cookTimeMinutes = state.cookTimeMinutes.toIntOrNull() ?: 0,
             sourceUrl = state.sourceUrl.ifBlank { null },
+            isFavorite = state.isFavorite,
             createdAt = if (recipeId == null) System.currentTimeMillis() else 0L,
             updatedAt = System.currentTimeMillis()
         )

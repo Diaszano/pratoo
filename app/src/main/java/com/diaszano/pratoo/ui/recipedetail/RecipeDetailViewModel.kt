@@ -49,4 +49,10 @@ class RecipeDetailViewModel @Inject constructor(
             _isDeleted.value = true
         }
     }
+
+    fun onToggleFavorite() {
+        viewModelScope.launch {
+            repository.toggleFavorite(recipeId)
+        }
+    }
 }

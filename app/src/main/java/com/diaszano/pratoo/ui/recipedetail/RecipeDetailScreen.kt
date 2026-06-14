@@ -1,5 +1,7 @@
 package com.diaszano.pratoo.ui.recipedetail
 
+import android.content.Intent
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,6 +23,9 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -64,7 +69,7 @@ fun RecipeDetailScreen(
 
     LaunchedEffect(uiState.isDeleted) {
         if (uiState.isDeleted) {
-            Toast.makeText(context, "Receita excluída", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.recipe_deleted), Toast.LENGTH_SHORT).show()
             onNavigateBack()
         }
     }
@@ -80,6 +85,37 @@ fun RecipeDetailScreen(
                     }
                 },
                 actions = {
+                    uiState.recipe?.let { recipe ->
+                        IconButton(onClick = {
+                            val text = formatRecipeAsText(recipe)
+                            val activity = context as? Activity
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, text)
+                                setPackage("com.whatsapp")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            val chooserIntent = Intent.createChooser(sendIntent, null).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            try {
+                                activity?.startActivity(chooserIntent)
+                            } catch (_: Exception) {
+                                try {
+                                    activity?.startActivity(sendIntent)
+                                } catch (_: Exception) { }
+                            }
+                        }) {
+                            Icon(Icons.Default.Share, stringResource(R.string.share))
+                        }
+                        IconButton(onClick = { viewModel.onToggleFavorite() }) {
+                            Icon(
+                                Icons.Filled.Star,
+                                contentDescription = if (recipe.recipe.isFavorite) stringResource(R.string.unfavorite) else stringResource(R.string.favorite),
+                                tint = if (recipe.recipe.isFavorite) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                     IconButton(onClick = {
                         uiState.recipe?.let { onEditRecipe(it.recipe.id) }
                     }) {
@@ -181,11 +217,20 @@ fun RecipeDetailScreen(
                     }
                 }
 
+                if (recipe.recipe.sourceUrl?.isNotBlank() == true) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "${stringResource(R.string.source_label)}: ${recipe.recipe.sourceUrl}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 // Ingredients
                 if (recipe.ingredients.isNotEmpty()) {
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        "Ingredientes",
+                        stringResource(R.string.ingredients_label),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -205,7 +250,7 @@ fun RecipeDetailScreen(
                     HorizontalDivider()
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        "Modo de preparo",
+                        stringResource(R.string.steps_label),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -225,7 +270,7 @@ fun RecipeDetailScreen(
                     HorizontalDivider()
                     Spacer(Modifier.height(16.dp))
                     Text(
-                        "Anotações",
+                        stringResource(R.string.notes_label),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -269,4 +314,49 @@ private fun formatIngredient(name: String, quantity: String, unit: String): Stri
         if (unit.isNotBlank()) append("$unit ")
         append(name)
     }
+}
+
+private fun formatRecipeAsText(recipe: com.diaszano.pratoo.data.local.relation.RecipeWithDetails): String {
+    return buildString {
+        appendLine(recipe.recipe.title)
+        appendLine()
+
+        val hasMeta = recipe.recipe.servings > 0 ||
+            recipe.recipe.prepTimeMinutes > 0 ||
+            recipe.recipe.cookTimeMinutes > 0
+        if (hasMeta) {
+            val meta = mutableListOf<String>()
+            if (recipe.recipe.servings > 0) meta.add("Porcoes: ${recipe.recipe.servings}")
+            if (recipe.recipe.prepTimeMinutes > 0) meta.add("Preparo: ${recipe.recipe.prepTimeMinutes}min")
+            if (recipe.recipe.cookTimeMinutes > 0) meta.add("Cozimento: ${recipe.recipe.cookTimeMinutes}min")
+            appendLine(meta.joinToString(" | "))
+            appendLine()
+        }
+
+        if (recipe.tags.isNotEmpty()) {
+            appendLine(recipe.tags.joinToString("  ") { "#${it.name}" })
+            appendLine()
+        }
+
+        if (recipe.ingredients.isNotEmpty()) {
+            appendLine("*Ingredientes*")
+            recipe.ingredients.forEach { ing ->
+                appendLine("- ${formatIngredient(ing.name, ing.quantity, ing.unit)}")
+            }
+            appendLine()
+        }
+
+        if (recipe.steps.isNotEmpty()) {
+            appendLine("*Modo de preparo*")
+            recipe.steps.sortedBy { it.order }.forEach { step ->
+                appendLine("${step.order + 1}. ${step.text}")
+            }
+            appendLine()
+        }
+
+        if (recipe.recipe.notes.isNotBlank()) {
+            appendLine("*Anotacoes*")
+            appendLine(recipe.recipe.notes)
+        }
+    }.trimEnd()
 }

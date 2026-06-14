@@ -19,19 +19,22 @@ fun TagFilterChips(
     tags: List<TagEntity>,
     selectedTagId: Long?,
     onTagSelected: (Long?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showAllChip: Boolean = false
 ) {
-    if (tags.isEmpty()) return
+    if (tags.isEmpty() && !showAllChip) return
 
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilterChip(
-            selected = selectedTagId == null,
-            onClick = { onTagSelected(null) },
-            label = { Text(stringResource(R.string.all)) }
-        )
+        if (showAllChip) {
+            FilterChip(
+                selected = selectedTagId == null,
+                onClick = { onTagSelected(null) },
+                label = { Text(stringResource(R.string.all)) }
+            )
+        }
         tags.forEach { tag ->
             FilterChip(
                 selected = selectedTagId == tag.id,

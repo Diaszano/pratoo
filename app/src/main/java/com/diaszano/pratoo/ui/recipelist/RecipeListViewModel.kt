@@ -75,4 +75,15 @@ class RecipeListViewModel @Inject constructor(
             repository.deleteRecipe(recipeId)
         }
     }
+
+    fun onToggleFavorite(recipeId: Long) {
+        viewModelScope.launch {
+            repository.toggleFavorite(recipeId)
+        }
+    }
+
+    fun clearFilters() {
+        _searchQuery.value = ""
+        _selectedTagId.value = null
+    }
 }
