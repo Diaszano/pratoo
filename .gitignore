@@ -37,6 +37,22 @@ app/schemas/
 
 # Local agent metadata
 .mimocode/
+.opencode/
+.goopspec/
 
 # Git worktrees
 .worktrees/
+
+# Kotlin
+.kotlin/
+
+# Google Services (if added later)
+google-services.json
+
+# Signing
+*.jks
+*.keystore
+
+# OS files
+.DS_Store
+Thumbs.db
