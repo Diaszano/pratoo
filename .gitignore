@@ -37,3 +37,6 @@ app/schemas/
 
 # Local agent metadata
 .mimocode/
+
+# Git worktrees
+.worktrees/
