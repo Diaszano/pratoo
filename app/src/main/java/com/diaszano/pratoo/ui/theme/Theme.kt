@@ -2,13 +2,22 @@ package com.diaszano.pratoo.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+
+private val AppShapes = Shapes(
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp)
+)
 
 private val LightColorScheme = lightColorScheme(
     primary = md_theme_light_primary,
@@ -54,13 +63,37 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = md_theme_dark_onSurfaceVariant,
 )
 
+private val MoonlightColorScheme = darkColorScheme(
+    primary = md_theme_moonlight_primary,
+    onPrimary = md_theme_moonlight_onPrimary,
+    primaryContainer = md_theme_moonlight_primaryContainer,
+    onPrimaryContainer = md_theme_moonlight_onPrimaryContainer,
+    secondary = md_theme_moonlight_secondary,
+    onSecondary = md_theme_moonlight_onSecondary,
+    secondaryContainer = md_theme_moonlight_secondaryContainer,
+    onSecondaryContainer = md_theme_moonlight_onSecondaryContainer,
+    tertiary = md_theme_moonlight_tertiary,
+    onTertiary = md_theme_moonlight_onTertiary,
+    tertiaryContainer = md_theme_moonlight_tertiaryContainer,
+    onTertiaryContainer = md_theme_moonlight_onTertiaryContainer,
+    error = md_theme_moonlight_error,
+    background = md_theme_moonlight_background,
+    onBackground = md_theme_moonlight_onBackground,
+    surface = md_theme_moonlight_surface,
+    onSurface = md_theme_moonlight_onSurface,
+    surfaceVariant = md_theme_moonlight_surfaceVariant,
+    onSurfaceVariant = md_theme_moonlight_onSurfaceVariant,
+)
+
 @Composable
 fun PratooTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
+    useMoonlight: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
+        useMoonlight -> MoonlightColorScheme
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -72,6 +105,7 @@ fun PratooTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = AppShapes,
         content = content
     )
 }
