@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material3.Button
@@ -43,6 +44,7 @@ import com.diaszano.pratoo.R
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToBackupSettings: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -123,6 +125,24 @@ fun SettingsScreen(
                 Icon(Icons.Default.FileUpload, null)
                 Spacer(Modifier.padding(ButtonDefaults.IconSpacing))
                 Text(if (uiState.isImporting) stringResource(R.string.importing) else stringResource(R.string.import_recipes))
+            }
+
+            Spacer(Modifier.height(24.dp))
+            Text(stringResource(R.string.google_drive_backup), style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.backup_permission_explanation),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = onNavigateToBackupSettings,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.Cloud, null)
+                Spacer(Modifier.padding(ButtonDefaults.IconSpacing))
+                Text(stringResource(R.string.backup_settings_title))
             }
 
             Spacer(Modifier.height(24.dp))
