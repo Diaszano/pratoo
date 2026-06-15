@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,10 +25,12 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import com.diaszano.pratoo.ui.theme.LocalAppColors
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -43,6 +47,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -61,6 +66,7 @@ import com.diaszano.pratoo.recipe.domain.model.Recipe
 fun RecipeDetailScreen(
     onNavigateBack: () -> Unit,
     onEditRecipe: (Long) -> Unit,
+    onStartCooking: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RecipeDetailViewModel = hiltViewModel()
 ) {
@@ -130,10 +136,20 @@ fun RecipeDetailScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                uiState.recipe?.let { onEditRecipe(it.id) }
-            }) {
-                Icon(Icons.Default.Edit, stringResource(R.string.edit))
+            uiState.recipe?.let { recipe ->
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(onClick = { onStartCooking(recipe.id) }) {
+                        Icon(Icons.Default.Restaurant, null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(stringResource(R.string.start_cooking))
+                    }
+                    FloatingActionButton(onClick = { onEditRecipe(recipe.id) }) {
+                        Icon(Icons.Default.Edit, stringResource(R.string.edit))
+                    }
+                }
             }
         }
     ) { padding ->

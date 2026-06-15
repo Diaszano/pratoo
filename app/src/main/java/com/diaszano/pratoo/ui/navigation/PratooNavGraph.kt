@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.diaszano.pratoo.ui.cooking.CookingModeScreen
 import com.diaszano.pratoo.ui.recipedetail.RecipeDetailScreen
 import com.diaszano.pratoo.ui.recipeedit.RecipeEditScreen
 import com.diaszano.pratoo.ui.recipelist.RecipeListScreen
@@ -21,6 +22,9 @@ data class RecipeDetailRoute(val recipeId: Long)
 
 @Serializable
 data class RecipeEditRoute(val recipeId: Long? = null)
+
+@Serializable
+data class CookingModeRoute(val recipeId: Long)
 
 @Serializable
 data object SettingsRoute
@@ -53,7 +57,15 @@ fun PratooNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onEditRecipe = { recipeId ->
                     navController.navigate(RecipeEditRoute(recipeId))
+                },
+                onStartCooking = { recipeId ->
+                    navController.navigate(CookingModeRoute(recipeId))
                 }
+            )
+        }
+        composable<CookingModeRoute> {
+            CookingModeScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable<RecipeEditRoute> {

@@ -2,6 +2,7 @@ package com.diaszano.pratoo.data.repository
 
 import com.diaszano.pratoo.recipe.domain.model.Ingredient
 import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeSection
 import com.diaszano.pratoo.recipe.domain.model.RecipeStep
 import com.diaszano.pratoo.recipe.domain.model.Tag
 import kotlinx.coroutines.flow.first
@@ -47,23 +48,28 @@ class RecipeRepositoryTest {
     fun `save recipe with ingredients and steps`() = runTest {
         val recipe = Recipe(
             title = "Recipe",
-            ingredients = listOf(
-                Ingredient(name = "Flour", quantity = "200g"),
-                Ingredient(name = "Sugar", quantity = "100g")
-            ),
-            steps = listOf(
-                RecipeStep(text = "Mix ingredients"),
-                RecipeStep(text = "Bake for 30 min")
+            sections = listOf(
+                RecipeSection(
+                    ingredients = listOf(
+                        Ingredient(name = "Flour", quantity = "200g"),
+                        Ingredient(name = "Sugar", quantity = "100g")
+                    ),
+                    steps = listOf(
+                        RecipeStep(text = "Mix ingredients"),
+                        RecipeStep(text = "Bake for 30 min")
+                    )
+                )
             )
         )
         val id = repository.saveRecipe(recipe)
 
         val saved = repository.getRecipe(id)
         assertNotNull(saved)
-        assertEquals(2, saved!!.ingredients.size)
-        assertEquals("Flour", saved.ingredients[0].name)
-        assertEquals(2, saved.steps.size)
-        assertEquals("Mix ingredients", saved.steps[0].text)
+        assertEquals(1, saved!!.sections.size)
+        assertEquals(2, saved.sections[0].ingredients.size)
+        assertEquals("Flour", saved.sections[0].ingredients[0].name)
+        assertEquals(2, saved.sections[0].steps.size)
+        assertEquals("Mix ingredients", saved.sections[0].steps[0].text)
     }
 
     @Test
