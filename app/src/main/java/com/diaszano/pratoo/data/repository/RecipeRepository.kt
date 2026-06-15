@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface RecipeRepository {
     fun observeAllRecipes(): Flow<List<RecipeListItem>>
+    fun observeFavoriteRecipes(): Flow<List<RecipeListItem>>
     fun searchRecipes(query: String?, tagId: Long?): Flow<List<RecipeListItem>>
     fun observeRecipe(id: Long): Flow<RecipeWithDetails?>
     suspend fun getRecipe(id: Long): RecipeWithDetails?
@@ -16,9 +17,11 @@ interface RecipeRepository {
         tags: List<TagEntity>
     ): Long
     suspend fun deleteRecipe(id: Long)
+    suspend fun deleteAllRecipes()
     suspend fun createTag(name: String): Long
     suspend fun toggleFavorite(id: Long)
     fun observeAllTags(): Flow<List<TagEntity>>
+    suspend fun getTagByName(name: String): TagEntity?
     suspend fun deleteTag(id: Long)
     suspend fun getAllRecipesWithDetails(): List<RecipeWithDetails>
     fun observeMeasurementUnits(): Flow<List<MeasurementUnit>>

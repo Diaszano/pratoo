@@ -1,15 +1,14 @@
 package com.diaszano.pratoo.data.repository
 
+import androidx.room.withTransaction
+import com.diaszano.pratoo.data.local.PratooDatabase
 import com.diaszano.pratoo.data.local.dao.IngredientDao
 import com.diaszano.pratoo.data.local.dao.MeasurementUnitDao
 import com.diaszano.pratoo.data.local.dao.RecipeDao
 import com.diaszano.pratoo.data.local.dao.StepDao
 import com.diaszano.pratoo.data.local.dao.TagDao
-import com.diaszano.pratoo.data.local.entity.IngredientEntity
 import com.diaszano.pratoo.data.local.entity.MeasurementUnit
-import com.diaszano.pratoo.data.local.entity.RecipeEntity
 import com.diaszano.pratoo.data.local.entity.RecipeTagCrossRef
-import com.diaszano.pratoo.data.local.entity.StepEntity
 import com.diaszano.pratoo.data.local.entity.TagEntity
 import com.diaszano.pratoo.data.local.relation.RecipeListItem
 import com.diaszano.pratoo.data.local.relation.RecipeWithDetails
@@ -19,6 +18,7 @@ import javax.inject.Singleton
 
 @Singleton
 class RecipeRepositoryImpl @Inject constructor(
+    private val database: PratooDatabase,
     private val recipeDao: RecipeDao,
     private val ingredientDao: IngredientDao,
     private val stepDao: StepDao,
@@ -28,6 +28,9 @@ class RecipeRepositoryImpl @Inject constructor(
 
     override fun observeAllRecipes(): Flow<List<RecipeListItem>> =
         recipeDao.observeAll()
+
+    override fun observeFavoriteRecipes(): Flow<List<RecipeListItem>> =
+        recipeDao.observeFavoriteRecipes()
 
     override fun searchRecipes(query: String?, tagId: Long?): Flow<List<RecipeListItem>> =
         recipeDao.search(query, tagId)
@@ -41,49 +44,81 @@ class RecipeRepositoryImpl @Inject constructor(
     override suspend fun saveRecipe(
         recipeWithDetails: RecipeWithDetails,
         tags: List<TagEntity>
-    ): Long {
+    ): Long = database.withTransaction {
         val recipe = recipeWithDetails.recipe
-        val ingredients = recipeWithDetails.ingredients.mapIndexed { index, ingredient ->
-            ingredient.copy(recipeId = recipe.id, position = index)
-        }
-        val steps = recipeWithDetails.steps.mapIndexed { index, step ->
-            step.copy(recipeId = recipe.id, order = index)
-        }
 
         val recipeId = if (recipe.id == 0L) {
             recipeDao.insert(recipe)
         } else {
             recipeDao.update(recipe)
+
             ingredientDao.deleteByRecipeId(recipe.id)
             stepDao.deleteByRecipeId(recipe.id)
             tagDao.deleteCrossRefsByRecipeId(recipe.id)
+
             recipe.id
         }
 
-        ingredientDao.insertAll(ingredients.map { it.copy(recipeId = recipeId) })
-        stepDao.insertAll(steps.map { it.copy(recipeId = recipeId) })
-
-        tags.forEach { tag ->
-            val tagId = if (tag.id == 0L) {
-                val existing = tagDao.getByName(tag.name)
-                if (existing != null) existing.id else tagDao.insert(tag)
-            } else {
-                tag.id
+        val ingredients = recipeWithDetails.ingredients
+            .filter { it.name.isNotBlank() }
+            .mapIndexed { index, ingredient ->
+                ingredient.copy(
+                    id = 0L,
+                    recipeId = recipeId,
+                    name = ingredient.name.trim(),
+                    quantity = ingredient.quantity.trim(),
+                    unit = ingredient.unit.trim(),
+                    position = index
+                )
             }
-            tagDao.insertCrossRef(RecipeTagCrossRef(recipeId, tagId))
-        }
 
-        return recipeId
+        val steps = recipeWithDetails.steps
+            .filter { it.text.isNotBlank() }
+            .mapIndexed { index, step ->
+                step.copy(
+                    id = 0L,
+                    recipeId = recipeId,
+                    text = step.text.trim(),
+                    order = index
+                )
+            }
+
+        ingredientDao.insertAll(ingredients)
+        stepDao.insertAll(steps)
+
+        tags
+            .map { it.name.trim() }
+            .filter { it.isNotBlank() }
+            .distinctBy { it.lowercase() }
+            .forEach { tagName ->
+                val existingTag = tagDao.getByName(tagName)
+                val tagId = existingTag?.id ?: tagDao.insert(TagEntity(name = tagName))
+
+                tagDao.insertCrossRef(
+                    RecipeTagCrossRef(
+                        recipeId = recipeId,
+                        tagId = tagId
+                    )
+                )
+            }
+
+        recipeId
     }
 
     override suspend fun deleteRecipe(id: Long) {
         recipeDao.deleteById(id)
     }
 
+    override suspend fun deleteAllRecipes() {
+        recipeDao.deleteAll()
+    }
+
     override suspend fun createTag(name: String): Long {
-        val existing = tagDao.getByName(name)
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return 0L
+        val existing = tagDao.getByName(trimmed)
         if (existing != null) return existing.id
-        return tagDao.insert(TagEntity(name = name))
+        return tagDao.insert(TagEntity(name = trimmed))
     }
 
     override suspend fun toggleFavorite(id: Long) {
@@ -93,6 +128,9 @@ class RecipeRepositoryImpl @Inject constructor(
 
     override fun observeAllTags(): Flow<List<TagEntity>> =
         tagDao.observeAll()
+
+    override suspend fun getTagByName(name: String): TagEntity? =
+        tagDao.getByName(name.trim())
 
     override suspend fun deleteTag(id: Long) {
         tagDao.deleteById(id)

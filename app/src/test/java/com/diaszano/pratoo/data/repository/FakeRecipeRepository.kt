@@ -30,6 +30,21 @@ class FakeRecipeRepository : RecipeRepository {
             }
         }
 
+    override fun observeFavoriteRecipes(): Flow<List<RecipeListItem>> =
+        recipesFlow.map { list ->
+            list
+                .filter { it.recipe.isFavorite }
+                .map {
+                    RecipeListItem(
+                        id = it.recipe.id,
+                        title = it.recipe.title,
+                        imageUri = it.recipe.imageUri,
+                        isFavorite = it.recipe.isFavorite,
+                        updatedAt = it.recipe.updatedAt
+                    )
+                }
+        }
+
     override fun searchRecipes(query: String?, tagId: Long?): Flow<List<RecipeListItem>> =
         recipesFlow.map { list ->
             list
@@ -106,6 +121,12 @@ class FakeRecipeRepository : RecipeRepository {
         recipesFlow.value = recipes.toList()
     }
 
+    override suspend fun deleteAllRecipes() {
+        recipes.clear()
+        crossRefs.clear()
+        recipesFlow.value = emptyList()
+    }
+
     override suspend fun toggleFavorite(id: Long) {
         val index = recipes.indexOfFirst { it.recipe.id == id }
         if (index >= 0) {
@@ -128,6 +149,12 @@ class FakeRecipeRepository : RecipeRepository {
     }
 
     override fun observeAllTags(): Flow<List<TagEntity>> = tagsFlow
+
+    override suspend fun getTagByName(name: String): TagEntity? {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return null
+        return tags.find { it.name.equals(trimmed, ignoreCase = true) }
+    }
 
     override suspend fun deleteTag(id: Long) {
         tags.removeAll { it.id == id }

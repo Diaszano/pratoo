@@ -59,4 +59,11 @@ interface RecipeDao {
 
     @Query("UPDATE recipes SET is_favorite = :isFavorite WHERE id = :id")
     suspend fun updateFavorite(id: Long, isFavorite: Boolean)
+
+    @Transaction
+    @Query("SELECT id, title, image_uri AS imageUri, is_favorite AS isFavorite, updated_at AS updatedAt FROM recipes WHERE is_favorite = 1 ORDER BY updated_at DESC")
+    fun observeFavoriteRecipes(): Flow<List<RecipeListItem>>
+
+    @Query("DELETE FROM recipes")
+    suspend fun deleteAll()
 }
