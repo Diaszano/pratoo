@@ -1,0 +1,51 @@
+name: "💡 Sugerir funcionalidade"
+description: "Compartilhe uma ideia para melhorar o Pratoo"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado pela sugestão! Descreva sua ideia com o máximo de detalhes possível.
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: Problema relacionado
+      description: Existe um problema que esta funcionalidade resolve?
+      placeholder: |
+        Ex: Fica difícil encontrar receitas quando tenho mais de 50.
+    validations:
+      required: false
+
+  - type: textarea
+    id: solucao
+    attributes:
+      label: Solução desejada
+      description: O que você gostaria que o app fizesse?
+      placeholder: |
+        Ex: Uma barra de pesquisa na tela inicial que filtra por nome ou ingrediente.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
+      description: Existe alguma outra solução que você já pensou?
+    validations:
+      required: false
+
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: Prints, rascunhos de UI, links para inspiração
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribuir
+    attributes:
+      label: Contribuição
+      options:
+        - label: Eu topo implementar essa funcionalidade

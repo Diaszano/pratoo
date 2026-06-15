@@ -1,0 +1,66 @@
+name: "🐛 Reportar bug"
+description: "Reporte um problema para nos ajudar a melhorar"
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! Preencha as informações abaixo para ajudar a diagnosticar o problema.
+
+  - type: textarea
+    id: descricao
+    attributes:
+      label: Descrição do problema
+      description: O que aconteceu? O que era esperado?
+      placeholder: |
+        Ex: Ao clicar em "Salvar", o app fecha inesperadamente.
+        Esperado: A receita deveria ser salva e voltar para a lista.
+    validations:
+      required: true
+
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos para reproduzir
+      description: Como podemos reproduzir o problema?
+      placeholder: |
+        1. Abra o app
+        2. Vá em "Adicionar receita"
+        3. Preencha os campos...
+        4. Toque em "Salvar"
+    validations:
+      required: true
+
+  - type: input
+    id: dispositivo
+    attributes:
+      label: Dispositivo / Emulador
+      description: Ex: Pixel 7 / Emulador API 35
+    validations:
+      required: true
+
+  - type: input
+    id: android
+    attributes:
+      label: Versão do Android
+      description: Ex: Android 14, Android 15
+    validations:
+      required: true
+
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do app
+      description: Vá em Configurações > Sobre ou veja o build.gradle.kts
+      placeholder: Ex: 0.1.0
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Stack trace (se disponível)
+      description: Cole logs do Logcat ou capturas de tela
+      render: shell
+    validations:
+      required: false
