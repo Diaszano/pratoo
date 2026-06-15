@@ -56,6 +56,5 @@ google-services.json
 # OS files
 .DS_Store
 Thumbs.db
-.omo/run-continuation/ses_136e3f8ccfferW1ffv42VAcs74.json
-.omo/run-continuation/ses_13728b911ffeipc33GVdRHRuJd.json
-.omo/run-continuation/ses_13819a00cffeKa4SbJlpRJkFx9.json
+.omo
+.serena
