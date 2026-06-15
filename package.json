@@ -4,7 +4,7 @@
   "private": true,
   "description": "App Android de receitas pessoais",
   "devDependencies": {
-    "semantic-release": "^24.2.3",
+    "semantic-release": "^25.0.5",
     "@semantic-release/exec": "^7.0.3"
   }
 }
