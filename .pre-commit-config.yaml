@@ -10,3 +10,11 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
+
+  - repo: https://github.com/conventional-commits/commitlint-pre-commit-hook
+    rev: v1.4.1
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies:
+          - "@commitlint/config-conventional"
