@@ -1,0 +1,12 @@
+# Default owner for all files
+* @Diaszano
+
+# GitHub workflows and config
+.github/ @Diaszano
+
+# Android app source
+app/src/ @Diaszano
+
+# Gradle build configuration
+*.gradle.kts
+gradle/ @Diaszano
