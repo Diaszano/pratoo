@@ -7,5 +7,5 @@ data class MeasurementUnitWithCategoryProjection(
     val categoryId: Long,
     val categoryCode: String,
     val categoryDisplayName: String,
-    val categorySortOrder: Int
+    val categorySortOrder: Int,
 )

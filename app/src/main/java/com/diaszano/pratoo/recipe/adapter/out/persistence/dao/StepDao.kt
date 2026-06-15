@@ -9,7 +9,6 @@ import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.StepEntity
 
 @Dao
 interface StepDao {
-
     @Query("SELECT * FROM steps WHERE section_id = :sectionId ORDER BY step_order")
     suspend fun getBySectionId(sectionId: Long): List<StepEntity>
 

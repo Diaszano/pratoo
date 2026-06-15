@@ -13,13 +13,13 @@ import androidx.room.PrimaryKey
             entity = RecipeEntity::class,
             parentColumns = ["id"],
             childColumns = ["recipe_id"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
         Index(value = ["recipe_id"]),
-        Index(value = ["recipe_id", "position"])
-    ]
+        Index(value = ["recipe_id", "position"]),
+    ],
 )
 data class RecipeSectionEntity(
     @PrimaryKey(autoGenerate = true)
@@ -31,5 +31,5 @@ data class RecipeSectionEntity(
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
 )

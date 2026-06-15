@@ -13,17 +13,18 @@ data class RecipeWithDetails(
     @Relation(
         entity = RecipeSectionEntity::class,
         parentColumn = "id",
-        entityColumn = "recipe_id"
+        entityColumn = "recipe_id",
     )
     val sections: List<RecipeSectionWithDetails>,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
-        associateBy = Junction(
-            value = RecipeTagCrossRef::class,
-            parentColumn = "recipe_id",
-            entityColumn = "tag_id"
-        )
+        associateBy =
+            Junction(
+                value = RecipeTagCrossRef::class,
+                parentColumn = "recipe_id",
+                entityColumn = "tag_id",
+            ),
     )
-    val tags: List<TagEntity>
+    val tags: List<TagEntity>,
 )

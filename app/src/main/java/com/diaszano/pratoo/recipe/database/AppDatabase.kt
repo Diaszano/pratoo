@@ -33,17 +33,23 @@ import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.TagEntity
         TagEntity::class,
         RecipeTagCrossRef::class,
         MeasurementCategoryEntity::class,
-        MeasurementUnitEntity::class
+        MeasurementUnitEntity::class,
     ],
     version = 1,
-    exportSchema = true
+    exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun recipeDao(): RecipeDao
+
     abstract fun recipeSectionDao(): RecipeSectionDao
+
     abstract fun ingredientDao(): IngredientDao
+
     abstract fun stepDao(): StepDao
+
     abstract fun tagDao(): TagDao
+
     abstract fun measurementUnitDao(): MeasurementUnitDao
+
     abstract fun measurementCategoryDao(): MeasurementCategoryDao
 }

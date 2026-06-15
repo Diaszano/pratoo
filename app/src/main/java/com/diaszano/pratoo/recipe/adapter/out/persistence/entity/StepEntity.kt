@@ -13,13 +13,13 @@ import androidx.room.PrimaryKey
             entity = RecipeSectionEntity::class,
             parentColumns = ["id"],
             childColumns = ["section_id"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
         Index(value = ["section_id"]),
-        Index(value = ["section_id", "step_order"])
-    ]
+        Index(value = ["section_id", "step_order"]),
+    ],
 )
 data class StepEntity(
     @PrimaryKey(autoGenerate = true)
@@ -28,5 +28,5 @@ data class StepEntity(
     val sectionId: Long,
     val text: String,
     @ColumnInfo(name = "step_order")
-    val order: Int = 0
+    val order: Int = 0,
 )

@@ -9,7 +9,6 @@ import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.IngredientEntit
 
 @Dao
 interface IngredientDao {
-
     @Query("SELECT * FROM ingredients WHERE section_id = :sectionId ORDER BY position")
     suspend fun getBySectionId(sectionId: Long): List<IngredientEntity>
 

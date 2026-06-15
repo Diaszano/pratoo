@@ -13,19 +13,19 @@ import androidx.room.PrimaryKey
             entity = MeasurementCategoryEntity::class,
             parentColumns = ["id"],
             childColumns = ["category_id"],
-            onDelete = ForeignKey.RESTRICT
-        )
+            onDelete = ForeignKey.RESTRICT,
+        ),
     ],
     indices = [
         Index(value = ["abbreviation"], unique = true),
         Index(value = ["category_id"]),
-        Index(value = ["category_id", "displayName"])
-    ]
+        Index(value = ["category_id", "displayName"]),
+    ],
 )
 data class MeasurementUnitEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val abbreviation: String,
     val displayName: String,
     @ColumnInfo(name = "category_id")
-    val categoryId: Long
+    val categoryId: Long,
 )

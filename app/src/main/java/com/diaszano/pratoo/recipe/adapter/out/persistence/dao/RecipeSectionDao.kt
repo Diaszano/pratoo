@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RecipeSectionDao {
-
     @Query("SELECT * FROM recipe_sections WHERE recipe_id = :recipeId ORDER BY position ASC")
     fun observeByRecipeId(recipeId: Long): Flow<List<RecipeSectionEntity>>
 

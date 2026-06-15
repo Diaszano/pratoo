@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MeasurementCategoryDao {
-
     @Query("SELECT * FROM measurement_categories ORDER BY sort_order ASC, display_name ASC")
     fun observeAll(): Flow<List<MeasurementCategoryEntity>>
 

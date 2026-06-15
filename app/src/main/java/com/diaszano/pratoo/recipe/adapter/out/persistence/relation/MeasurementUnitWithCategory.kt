@@ -9,7 +9,7 @@ data class MeasurementUnitWithCategory(
     @Embedded val unit: MeasurementUnitEntity,
     @Relation(
         parentColumn = "category_id",
-        entityColumn = "id"
+        entityColumn = "id",
     )
-    val category: MeasurementCategoryEntity
+    val category: MeasurementCategoryEntity,
 )

@@ -10,24 +10,28 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MeasurementUnitDao {
-
-    @Query("""
+    @Query(
+        """
         SELECT mu.*
         FROM measurement_units mu
         INNER JOIN measurement_categories mc ON mc.id = mu.category_id
         ORDER BY mc.sort_order ASC, mu.displayName ASC
-    """)
+    """,
+    )
     fun observeAll(): Flow<List<MeasurementUnitEntity>>
 
-    @Query("""
+    @Query(
+        """
         SELECT mu.*
         FROM measurement_units mu
         INNER JOIN measurement_categories mc ON mc.id = mu.category_id
         ORDER BY mc.sort_order ASC, mu.displayName ASC
-    """)
+    """,
+    )
     suspend fun getAll(): List<MeasurementUnitEntity>
 
-    @Query("""
+    @Query(
+        """
         SELECT
             mu.id AS id,
             mu.abbreviation AS abbreviation,
@@ -39,7 +43,8 @@ interface MeasurementUnitDao {
         FROM measurement_units mu
         INNER JOIN measurement_categories mc ON mc.id = mu.category_id
         ORDER BY mc.sort_order ASC, mu.displayName ASC
-    """)
+    """,
+    )
     fun observeAllWithCategory(): Flow<List<MeasurementUnitWithCategoryProjection>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

@@ -14,9 +14,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RecipeDao {
-
     @Transaction
-    @Query("SELECT id, title, image_uri AS imageUri, is_favorite AS isFavorite, updated_at AS updatedAt FROM recipes ORDER BY updated_at DESC")
+    @Query(
+        "SELECT id, title, image_uri AS imageUri, is_favorite AS isFavorite, updated_at AS updatedAt FROM recipes ORDER BY updated_at DESC",
+    )
     fun observeAll(): Flow<List<RecipeListProjection>>
 
     @Transaction
@@ -30,9 +31,12 @@ interface RecipeDao {
         WHERE (:query IS NULL OR r.title LIKE '%' || :query || '%' OR rs.name LIKE '%' || :query || '%' OR i.name LIKE '%' || :query || '%')
         AND (:tagId IS NULL OR rt.tag_id = :tagId)
         ORDER BY r.updated_at DESC
-        """
+        """,
     )
-    fun search(query: String?, tagId: Long?): Flow<List<RecipeListProjection>>
+    fun search(
+        query: String?,
+        tagId: Long?,
+    ): Flow<List<RecipeListProjection>>
 
     @Transaction
     @Query("SELECT * FROM recipes WHERE id = :id")
@@ -47,7 +51,9 @@ interface RecipeDao {
     suspend fun getAllWithDetails(): List<RecipeWithDetails>
 
     @Transaction
-    @Query("SELECT id, title, image_uri AS imageUri, is_favorite AS isFavorite, updated_at AS updatedAt FROM recipes WHERE is_favorite = 1 ORDER BY updated_at DESC")
+    @Query(
+        "SELECT id, title, image_uri AS imageUri, is_favorite AS isFavorite, updated_at AS updatedAt FROM recipes WHERE is_favorite = 1 ORDER BY updated_at DESC",
+    )
     fun observeFavoriteRecipes(): Flow<List<RecipeListProjection>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -66,5 +72,8 @@ interface RecipeDao {
     suspend fun deleteAll()
 
     @Query("UPDATE recipes SET is_favorite = :isFavorite WHERE id = :id")
-    suspend fun updateFavorite(id: Long, isFavorite: Boolean)
+    suspend fun updateFavorite(
+        id: Long,
+        isFavorite: Boolean,
+    )
 }

@@ -13,20 +13,20 @@ import androidx.room.Index
             entity = RecipeEntity::class,
             parentColumns = ["id"],
             childColumns = ["recipe_id"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
             entity = TagEntity::class,
             parentColumns = ["id"],
             childColumns = ["tag_id"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
-    indices = [Index("tag_id")]
+    indices = [Index("tag_id")],
 )
 data class RecipeTagCrossRef(
     @ColumnInfo(name = "recipe_id")
     val recipeId: Long,
     @ColumnInfo(name = "tag_id")
-    val tagId: Long
+    val tagId: Long,
 )

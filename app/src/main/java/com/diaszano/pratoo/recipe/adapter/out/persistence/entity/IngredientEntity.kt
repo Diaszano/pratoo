@@ -13,14 +13,14 @@ import androidx.room.PrimaryKey
             entity = RecipeSectionEntity::class,
             parentColumns = ["id"],
             childColumns = ["section_id"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
     indices = [
         Index(value = ["section_id"]),
         Index(value = ["section_id", "position"]),
-        Index(value = ["name"])
-    ]
+        Index(value = ["name"]),
+    ],
 )
 data class IngredientEntity(
     @PrimaryKey(autoGenerate = true)
@@ -30,5 +30,5 @@ data class IngredientEntity(
     val name: String,
     val quantity: String = "",
     val unit: String = "",
-    val position: Int = 0
+    val position: Int = 0,
 )

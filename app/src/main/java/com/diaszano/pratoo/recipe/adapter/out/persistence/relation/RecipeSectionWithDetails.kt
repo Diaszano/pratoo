@@ -10,12 +10,12 @@ data class RecipeSectionWithDetails(
     @Embedded val section: RecipeSectionEntity,
     @Relation(
         parentColumn = "id",
-        entityColumn = "section_id"
+        entityColumn = "section_id",
     )
     val ingredients: List<IngredientEntity>,
     @Relation(
         parentColumn = "id",
-        entityColumn = "section_id"
+        entityColumn = "section_id",
     )
-    val steps: List<StepEntity>
+    val steps: List<StepEntity>,
 )

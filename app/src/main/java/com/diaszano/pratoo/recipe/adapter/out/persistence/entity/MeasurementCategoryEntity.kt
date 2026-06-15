@@ -9,8 +9,8 @@ import androidx.room.PrimaryKey
     tableName = "measurement_categories",
     indices = [
         Index(value = ["code"], unique = true),
-        Index(value = ["sort_order"])
-    ]
+        Index(value = ["sort_order"]),
+    ],
 )
 data class MeasurementCategoryEntity(
     @PrimaryKey(autoGenerate = true)
@@ -19,5 +19,5 @@ data class MeasurementCategoryEntity(
     @ColumnInfo(name = "display_name")
     val displayName: String,
     @ColumnInfo(name = "sort_order")
-    val sortOrder: Int
+    val sortOrder: Int,
 )

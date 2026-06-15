@@ -5,5 +5,5 @@ data class RecipeListProjection(
     val title: String,
     val imageUri: String?,
     val isFavorite: Boolean,
-    val updatedAt: Long
+    val updatedAt: Long,
 )

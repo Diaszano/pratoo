@@ -24,116 +24,119 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class RoomRecipeRepository @Inject constructor(
-    private val database: AppDatabase,
-    private val recipeDao: RecipeDao,
-    private val recipeSectionDao: RecipeSectionDao,
-    private val ingredientDao: IngredientDao,
-    private val stepDao: StepDao,
-    private val tagDao: TagDao,
-    private val measurementUnitDao: MeasurementUnitDao
-) : RecipeRepository {
+class RoomRecipeRepository
+    @Inject
+    constructor(
+        private val database: AppDatabase,
+        private val recipeDao: RecipeDao,
+        private val recipeSectionDao: RecipeSectionDao,
+        private val ingredientDao: IngredientDao,
+        private val stepDao: StepDao,
+        private val tagDao: TagDao,
+        private val measurementUnitDao: MeasurementUnitDao,
+    ) : RecipeRepository {
+        override fun observeAllRecipes(): Flow<List<RecipeListItem>> = recipeDao.observeAll().map { list -> list.map { it.toDomain() } }
 
-    override fun observeAllRecipes(): Flow<List<RecipeListItem>> =
-        recipeDao.observeAll().map { list -> list.map { it.toDomain() } }
+        override fun observeFavoriteRecipes(): Flow<List<RecipeListItem>> =
+            recipeDao.observeFavoriteRecipes().map { list -> list.map { it.toDomain() } }
 
-    override fun observeFavoriteRecipes(): Flow<List<RecipeListItem>> =
-        recipeDao.observeFavoriteRecipes().map { list -> list.map { it.toDomain() } }
+        override fun searchRecipes(
+            query: String?,
+            tagId: Long?,
+        ): Flow<List<RecipeListItem>> = recipeDao.search(query, tagId).map { list -> list.map { it.toDomain() } }
 
-    override fun searchRecipes(query: String?, tagId: Long?): Flow<List<RecipeListItem>> =
-        recipeDao.search(query, tagId).map { list -> list.map { it.toDomain() } }
+        override fun observeRecipe(id: Long): Flow<Recipe?> = recipeDao.observeById(id).map { it?.toDomain() }
 
-    override fun observeRecipe(id: Long): Flow<Recipe?> =
-        recipeDao.observeById(id).map { it?.toDomain() }
+        override suspend fun getRecipe(id: Long): Recipe? = recipeDao.getById(id)?.toDomain()
 
-    override suspend fun getRecipe(id: Long): Recipe? =
-        recipeDao.getById(id)?.toDomain()
+        override suspend fun saveRecipe(recipe: Recipe): Long =
+            database.withTransaction {
+                val recipeId =
+                    if (recipe.id == 0L) {
+                        recipeDao.insert(recipe.toEntity())
+                    } else {
+                        recipeDao.update(recipe.toEntity())
+                        tagDao.deleteCrossRefsByRecipeId(recipe.id)
+                        recipe.id
+                    }
 
-    override suspend fun saveRecipe(recipe: Recipe): Long = database.withTransaction {
-        val recipeId = if (recipe.id == 0L) {
-            recipeDao.insert(recipe.toEntity())
-        } else {
-            recipeDao.update(recipe.toEntity())
-            tagDao.deleteCrossRefsByRecipeId(recipe.id)
-            recipe.id
+                recipeSectionDao.deleteByRecipeId(recipeId)
+
+                recipe.sections
+                    .ifEmpty { listOf(RecipeSection()) }
+                    .mapIndexed { sectionIndex, section ->
+                        val sectionId =
+                            recipeSectionDao.insert(
+                                section.toEntity(recipeId = recipeId).copy(position = sectionIndex),
+                            )
+
+                        ingredientDao.insertAll(
+                            section.ingredients
+                                .filter { it.name.isNotBlank() }
+                                .mapIndexed { idx, ing ->
+                                    ing.copy(id = 0L, position = idx).toEntity(sectionId = sectionId)
+                                },
+                        )
+
+                        stepDao.insertAll(
+                            section.steps
+                                .filter { it.text.isNotBlank() }
+                                .mapIndexed { idx, step ->
+                                    step.copy(id = 0L, order = idx).toEntity(sectionId = sectionId)
+                                },
+                        )
+                    }
+
+                saveTags(recipeId, recipe.tags)
+                recipeId
+            }
+
+        override suspend fun deleteRecipe(id: Long) {
+            recipeDao.deleteById(id)
         }
 
-        recipeSectionDao.deleteByRecipeId(recipeId)
+        override suspend fun deleteAllRecipes() {
+            recipeDao.deleteAll()
+        }
 
-        recipe.sections
-            .ifEmpty { listOf(RecipeSection()) }
-            .mapIndexed { sectionIndex, section ->
-                val sectionId = recipeSectionDao.insert(
-                    section.toEntity(recipeId = recipeId).copy(position = sectionIndex)
-                )
+        override suspend fun toggleFavorite(id: Long) {
+            val recipe = recipeDao.getById(id) ?: return
+            recipeDao.updateFavorite(id, !recipe.recipe.isFavorite)
+        }
 
-                ingredientDao.insertAll(
-                    section.ingredients
-                        .filter { it.name.isNotBlank() }
-                        .mapIndexed { idx, ing ->
-                            ing.copy(id = 0L, position = idx).toEntity(sectionId = sectionId)
-                        }
-                )
+        override fun observeAllTags(): Flow<List<Tag>> = tagDao.observeAll().map { list -> list.map { it.toDomain() } }
 
-                stepDao.insertAll(
-                    section.steps
-                        .filter { it.text.isNotBlank() }
-                        .mapIndexed { idx, step ->
-                            step.copy(id = 0L, order = idx).toEntity(sectionId = sectionId)
-                        }
-                )
-            }
+        override suspend fun getTagByName(name: String): Tag? = tagDao.getByName(name.trim())?.toDomain()
 
-        saveTags(recipeId, recipe.tags)
-        recipeId
+        override suspend fun createTag(name: String): Long {
+            val trimmed = name.trim()
+            if (trimmed.isBlank()) return 0L
+            val existing = tagDao.getByName(trimmed)
+            if (existing != null) return existing.id
+            return tagDao.insert(TagEntity(name = trimmed))
+        }
+
+        override suspend fun deleteTag(id: Long) {
+            tagDao.deleteById(id)
+        }
+
+        override suspend fun getAllRecipes(): List<Recipe> = recipeDao.getAllWithDetails().map { it.toDomain() }
+
+        override fun observeMeasurementUnits(): Flow<List<MeasurementUnit>> =
+            measurementUnitDao.observeAllWithCategory().map { list -> list.map { it.toDomain() } }
+
+        private suspend fun saveTags(
+            recipeId: Long,
+            tags: List<Tag>,
+        ) {
+            tags
+                .map { it.copy(name = it.name.trim()) }
+                .filter { it.name.isNotBlank() }
+                .distinctBy { it.name.lowercase() }
+                .forEach { tag ->
+                    val existingTag = tagDao.getByName(tag.name)
+                    val tagId = existingTag?.id ?: tagDao.insert(TagEntity(name = tag.name))
+                    tagDao.insertCrossRef(RecipeTagCrossRef(recipeId, tagId))
+                }
+        }
     }
-
-    override suspend fun deleteRecipe(id: Long) {
-        recipeDao.deleteById(id)
-    }
-
-    override suspend fun deleteAllRecipes() {
-        recipeDao.deleteAll()
-    }
-
-    override suspend fun toggleFavorite(id: Long) {
-        val recipe = recipeDao.getById(id) ?: return
-        recipeDao.updateFavorite(id, !recipe.recipe.isFavorite)
-    }
-
-    override fun observeAllTags(): Flow<List<Tag>> =
-        tagDao.observeAll().map { list -> list.map { it.toDomain() } }
-
-    override suspend fun getTagByName(name: String): Tag? =
-        tagDao.getByName(name.trim())?.toDomain()
-
-    override suspend fun createTag(name: String): Long {
-        val trimmed = name.trim()
-        if (trimmed.isBlank()) return 0L
-        val existing = tagDao.getByName(trimmed)
-        if (existing != null) return existing.id
-        return tagDao.insert(TagEntity(name = trimmed))
-    }
-
-    override suspend fun deleteTag(id: Long) {
-        tagDao.deleteById(id)
-    }
-
-    override suspend fun getAllRecipes(): List<Recipe> =
-        recipeDao.getAllWithDetails().map { it.toDomain() }
-
-    override fun observeMeasurementUnits(): Flow<List<MeasurementUnit>> =
-        measurementUnitDao.observeAllWithCategory().map { list -> list.map { it.toDomain() } }
-
-    private suspend fun saveTags(recipeId: Long, tags: List<Tag>) {
-        tags
-            .map { it.copy(name = it.name.trim()) }
-            .filter { it.name.isNotBlank() }
-            .distinctBy { it.name.lowercase() }
-            .forEach { tag ->
-                val existingTag = tagDao.getByName(tag.name)
-                val tagId = existingTag?.id ?: tagDao.insert(TagEntity(name = tag.name))
-                tagDao.insertCrossRef(RecipeTagCrossRef(recipeId, tagId))
-            }
-    }
-}
