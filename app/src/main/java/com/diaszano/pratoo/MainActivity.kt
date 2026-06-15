@@ -17,7 +17,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     @Inject
     lateinit var appPreferences: AppPreferences
 
@@ -26,25 +25,27 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val palette by appPreferences.appTheme.collectAsStateWithLifecycle(
-                initialValue = "pratoo"
+                initialValue = "pratoo",
             )
             val themeMode by appPreferences.themeMode.collectAsStateWithLifecycle(
-                initialValue = ThemeMode.SYSTEM
+                initialValue = ThemeMode.SYSTEM,
             )
 
-            val appTheme = when (palette) {
-                "moonlight" -> AppTheme.Moonlight
-                else -> AppTheme.Pratoo
-            }
-            val colorMode = when (themeMode) {
-                ThemeMode.LIGHT -> AppThemeMode.Light
-                ThemeMode.DARK -> AppThemeMode.Dark
-                ThemeMode.SYSTEM -> AppThemeMode.System
-            }
+            val appTheme =
+                when (palette) {
+                    "moonlight" -> AppTheme.Moonlight
+                    else -> AppTheme.Pratoo
+                }
+            val colorMode =
+                when (themeMode) {
+                    ThemeMode.LIGHT -> AppThemeMode.Light
+                    ThemeMode.DARK -> AppThemeMode.Dark
+                    ThemeMode.SYSTEM -> AppThemeMode.System
+                }
 
             PratooTheme(
                 appTheme = appTheme,
-                themeMode = colorMode
+                themeMode = colorMode,
             ) {
                 PratooNavGraph()
             }
