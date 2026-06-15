@@ -35,10 +35,13 @@
     <string name="export_error">Erro ao exportar</string>
     <string name="import_error">Erro ao importar</string>
     <string name="appearance">Aparência</string>
+    <string name="theme_pratoo">Pratoo</string>
+    <string name="theme_moonlight">Moonlight</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Escuro</string>
-    <string name="theme_moonlight">Moonlight</string>
+    <string name="theme_palette">Paleta</string>
+    <string name="theme_mode">Modo</string>
     <string name="preferences">Preferências</string>
     <string name="units_coming_soon">Preferência de unidade aplicada a novos ingredientes.</string>
     <string name="unit_system">Sistema de unidades</string>

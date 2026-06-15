@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,6 +24,7 @@ data class SettingsUiState(
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,
     val message: String? = null,
+    val appTheme: String = "pratoo",
     val themeMode: String = "system",
     val unitSystem: String = "metric"
 )
@@ -40,14 +42,38 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            appPreferences.themeMode.collect { mode ->
-                _uiState.update { it.copy(themeMode = mode.name.lowercase()) }
+            combine(
+                appPreferences.appTheme,
+                appPreferences.themeMode,
+                appPreferences.unitSystem
+            ) { appTheme, themeMode, unitSystem ->
+                Triple(appTheme, themeMode, unitSystem)
+            }.collect { (appTheme, themeMode, unitSystem) ->
+                _uiState.update {
+                    it.copy(
+                        appTheme = appTheme,
+                        themeMode = themeMode.name.lowercase(),
+                        unitSystem = unitSystem
+                    )
+                }
             }
         }
+    }
+
+    fun onAppThemeChange(palette: String) {
         viewModelScope.launch {
-            appPreferences.unitSystem.collect { unit ->
-                _uiState.update { it.copy(unitSystem = unit) }
+            appPreferences.setAppTheme(palette)
+        }
+    }
+
+    fun onThemeModeChange(mode: String) {
+        viewModelScope.launch {
+            val themeMode = when (mode) {
+                "light" -> ThemeMode.LIGHT
+                "dark" -> ThemeMode.DARK
+                else -> ThemeMode.SYSTEM
             }
+            appPreferences.setThemeMode(themeMode)
         }
     }
 
@@ -84,18 +110,6 @@ class SettingsViewModel @Inject constructor(
 
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(message = null)
-    }
-
-    fun onThemeModeChange(mode: String) {
-        viewModelScope.launch {
-            val themeMode = when (mode) {
-                "light" -> ThemeMode.LIGHT
-                "dark" -> ThemeMode.DARK
-                "moonlight" -> ThemeMode.MOONLIGHT
-                else -> ThemeMode.SYSTEM
-            }
-            appPreferences.setThemeMode(themeMode)
-        }
     }
 
     fun onUnitSystemChange(unit: String) {

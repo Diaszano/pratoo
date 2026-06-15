@@ -124,16 +124,45 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(24.dp))
             Text(stringResource(R.string.appearance), style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
 
+            // ── Palette selection ─────────────────────────────────────
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.theme_palette),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                val themeOptions = listOf(
+                val paletteOptions = listOf(
+                    "pratoo" to R.string.theme_pratoo,
+                    "moonlight" to R.string.theme_moonlight
+                )
+                paletteOptions.forEach { (value, labelRes) ->
+                    FilterChip(
+                        selected = uiState.appTheme == value,
+                        onClick = { viewModel.onAppThemeChange(value) },
+                        label = { Text(stringResource(labelRes)) },
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
+            }
+
+            // ── Mode selection ────────────────────────────────────────
+            Spacer(Modifier.height(12.dp))
+            Text(
+                stringResource(R.string.theme_mode),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                val modeOptions = listOf(
                     "system" to R.string.theme_system,
                     "light" to R.string.theme_light,
-                    "dark" to R.string.theme_dark,
-                    "moonlight" to R.string.theme_moonlight
-                ) as List<Pair<String, Int>>
-                themeOptions.forEach { (value, labelRes) ->
+                    "dark" to R.string.theme_dark
+                )
+                modeOptions.forEach { (value, labelRes) ->
                     FilterChip(
                         selected = uiState.themeMode == value,
                         onClick = { viewModel.onThemeModeChange(value) },
@@ -143,7 +172,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
             Text(stringResource(R.string.preferences), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
             Text(
@@ -156,7 +185,7 @@ fun SettingsScreen(
                 val unitOptions = listOf(
                     "metric" to R.string.unit_metric,
                     "imperial" to R.string.unit_imperial
-                ) as List<Pair<String, Int>>
+                )
                 unitOptions.forEach { (value, labelRes) ->
                     FilterChip(
                         selected = uiState.unitSystem == value,

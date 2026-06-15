@@ -49,8 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import com.diaszano.pratoo.ui.theme.MoonlightFavorite
 import androidx.compose.ui.layout.ContentScale
+import com.diaszano.pratoo.ui.theme.LocalAppColors
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -187,6 +187,8 @@ private fun RecipeCard(
     onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val appColors = LocalAppColors.current
+
     Column(
         modifier = modifier
             .clip(MaterialTheme.shapes.medium)
@@ -215,6 +217,9 @@ private fun RecipeCard(
                 )
             }
 
+            // Gradient scrim for text readability over images.
+            // Semi-transparent black is intentional here — it works across all
+            // themes because it overlays photo content, not theme surfaces.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -234,14 +239,14 @@ private fun RecipeCard(
                         .padding(6.dp)
                         .size(32.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .background(Color.Black.copy(alpha = 0.3f))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
                         .clickable(onClick = onToggleFavorite),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Filled.Star,
                         contentDescription = stringResource(R.string.favorite),
-                        tint = MoonlightFavorite,
+                        tint = appColors.favorite,
                         modifier = Modifier.size(20.dp)
                     )
                 }

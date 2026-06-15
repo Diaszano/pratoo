@@ -19,13 +19,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -41,11 +41,12 @@ fun RecipeListSkeleton(count: Int = 6) {
         label = "shimmer"
     )
 
+    val shimmerBase = MaterialTheme.colorScheme.surfaceVariant
     val shimmerBrush = Brush.linearGradient(
         colors = listOf(
-            Color.LightGray.copy(alpha = 0.2f),
-            Color.LightGray.copy(alpha = 0.5f),
-            Color.LightGray.copy(alpha = 0.2f)
+            shimmerBase.copy(alpha = 0.3f),
+            shimmerBase.copy(alpha = 0.6f),
+            shimmerBase.copy(alpha = 0.3f)
         ),
         start = Offset(translateAnim - 200f, translateAnim - 200f),
         end = Offset(translateAnim, translateAnim)

@@ -54,8 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import com.diaszano.pratoo.ui.theme.MoonlightFavorite
+import com.diaszano.pratoo.ui.theme.LocalAppColors
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -74,6 +73,7 @@ fun RecipeEditScreen(
     viewModel: RecipeEditViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val appColors = LocalAppColors.current
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -155,7 +155,7 @@ fun RecipeEditScreen(
                     Icon(
                         Icons.Filled.Star,
                         contentDescription = null,
-                        tint = if (uiState.isFavorite) MoonlightFavorite else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (uiState.isFavorite) appColors.favorite else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )
                 }

@@ -35,10 +35,13 @@
     <string name="export_error">Export error</string>
     <string name="import_error">Import error</string>
     <string name="appearance">Appearance</string>
+    <string name="theme_pratoo">Pratoo</string>
+    <string name="theme_moonlight">Moonlight</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
-    <string name="theme_moonlight">Moonlight</string>
+    <string name="theme_palette">Palette</string>
+    <string name="theme_mode">Mode</string>
     <string name="preferences">Preferences</string>
     <string name="units_coming_soon">Unit preference applied to new ingredients.</string>
     <string name="unit_system">Unit system</string>
