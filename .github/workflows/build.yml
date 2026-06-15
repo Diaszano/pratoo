@@ -41,6 +41,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
           gradle-home-cache-cleanup: true
+          validate-wrappers: false
 
       - name: Run ktlintCheck
         run: ./gradlew ktlintCheck :app:ktlintCheck
@@ -77,6 +78,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
           gradle-home-cache-cleanup: true
+          validate-wrappers: false
 
       - name: Run unit tests
         run: ./gradlew test
@@ -108,6 +110,7 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
           gradle-home-cache-cleanup: true
+          validate-wrappers: false
 
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug
