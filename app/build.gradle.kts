@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.ktlint)
 }
 
 android {
@@ -27,7 +28,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -37,6 +38,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    lint {
+        abortOnError = true
+        checkDependencies = true
+        sarifReport = true
+        xmlReport = true
+    }
 
     buildFeatures {
         compose = true
@@ -51,6 +58,17 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
+ktlint {
+    android.set(true)
+    ignoreFailures.set(false)
+    outputToConsole.set(true)
+
+    filter {
+        exclude("**/build/**")
+        exclude("**/generated/**")
     }
 }
 

@@ -1,12 +1,8 @@
 package com.diaszano.pratoo.data.repository
 
-import com.diaszano.pratoo.recipe.domain.model.Ingredient
-import com.diaszano.pratoo.recipe.domain.model.MeasurementCategory
 import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
 import com.diaszano.pratoo.recipe.domain.model.Recipe
 import com.diaszano.pratoo.recipe.domain.model.RecipeListItem
-import com.diaszano.pratoo.recipe.domain.model.RecipeSection
-import com.diaszano.pratoo.recipe.domain.model.RecipeStep
 import com.diaszano.pratoo.recipe.domain.model.Tag
 import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 class FakeRecipeRepository : RecipeRepository {
-
     private val recipes = mutableListOf<Recipe>()
     private val tags = mutableListOf<Tag>()
     private val crossRefs = mutableListOf<Pair<Long, Long>>()
@@ -30,7 +25,7 @@ class FakeRecipeRepository : RecipeRepository {
                     title = it.title,
                     imageUri = it.imageUri,
                     isFavorite = it.isFavorite,
-                    updatedAt = it.updatedAt
+                    updatedAt = it.updatedAt,
                 )
             }
         }
@@ -45,77 +40,84 @@ class FakeRecipeRepository : RecipeRepository {
                         title = it.title,
                         imageUri = it.imageUri,
                         isFavorite = it.isFavorite,
-                        updatedAt = it.updatedAt
+                        updatedAt = it.updatedAt,
                     )
                 }
         }
 
-    override fun searchRecipes(query: String?, tagId: Long?): Flow<List<RecipeListItem>> =
+    override fun searchRecipes(
+        query: String?,
+        tagId: Long?,
+    ): Flow<List<RecipeListItem>> =
         recipesFlow.map { list ->
             list
                 .filter { recipe ->
-                    val matchesQuery = query.isNullOrBlank() ||
-                        recipe.title.contains(query, ignoreCase = true) ||
-                        recipe.sections.any { section ->
-                            section.name.contains(query, ignoreCase = true) ||
-                            section.ingredients.any { it.name.contains(query, ignoreCase = true) }
-                        }
-                    val matchesTag = tagId == null ||
-                        crossRefs.any { it.first == recipe.id && it.second == tagId }
+                    val matchesQuery =
+                        query.isNullOrBlank() ||
+                            recipe.title.contains(query, ignoreCase = true) ||
+                            recipe.sections.any { section ->
+                                section.name.contains(query, ignoreCase = true) ||
+                                    section.ingredients.any { it.name.contains(query, ignoreCase = true) }
+                            }
+                    val matchesTag =
+                        tagId == null ||
+                            crossRefs.any { it.first == recipe.id && it.second == tagId }
                     matchesQuery && matchesTag
-                }
-                .map {
+                }.map {
                     RecipeListItem(
                         id = it.id,
                         title = it.title,
                         imageUri = it.imageUri,
                         isFavorite = it.isFavorite,
-                        updatedAt = it.updatedAt
+                        updatedAt = it.updatedAt,
                     )
                 }
         }
 
-    override fun observeRecipe(id: Long): Flow<Recipe?> =
-        recipesFlow.map { list -> list.find { it.id == id } }
+    override fun observeRecipe(id: Long): Flow<Recipe?> = recipesFlow.map { list -> list.find { it.id == id } }
 
-    override suspend fun getRecipe(id: Long): Recipe? =
-        recipes.find { it.id == id }
+    override suspend fun getRecipe(id: Long): Recipe? = recipes.find { it.id == id }
 
     override suspend fun saveRecipe(recipe: Recipe): Long {
-        val id = if (recipe.id == 0L) {
-            nextId++
-        } else {
-            recipes.removeAll { it.id == recipe.id }
-            crossRefs.removeAll { it.first == recipe.id }
-            recipe.id
-        }
-
-        val resolvedTags = recipe.tags.map { tag ->
-            val trimmed = tag.name.trim()
-            if (trimmed.isBlank()) return@map null
-            val existing = this.tags.find { it.name.equals(trimmed, ignoreCase = true) }
-            if (existing != null) {
-                crossRefs.add(id to existing.id)
-                existing
+        val id =
+            if (recipe.id == 0L) {
+                nextId++
             } else {
-                val newId = nextId++
-                val newTag = tag.copy(id = newId, name = trimmed)
-                this.tags.add(newTag)
-                crossRefs.add(id to newTag.id)
-                newTag
+                recipes.removeAll { it.id == recipe.id }
+                crossRefs.removeAll { it.first == recipe.id }
+                recipe.id
             }
-        }.filterNotNull()
 
-        val savedRecipe = recipe.copy(
-            id = id,
-            sections = recipe.sections.map { section ->
-                section.copy(
-                    ingredients = section.ingredients.map { it.copy(id = 0L) },
-                    steps = section.steps.map { it.copy(id = 0L) }
-                )
-            },
-            tags = resolvedTags
-        )
+        val resolvedTags =
+            recipe.tags
+                .map { tag ->
+                    val trimmed = tag.name.trim()
+                    if (trimmed.isBlank()) return@map null
+                    val existing = this.tags.find { it.name.equals(trimmed, ignoreCase = true) }
+                    if (existing != null) {
+                        crossRefs.add(id to existing.id)
+                        existing
+                    } else {
+                        val newId = nextId++
+                        val newTag = tag.copy(id = newId, name = trimmed)
+                        this.tags.add(newTag)
+                        crossRefs.add(id to newTag.id)
+                        newTag
+                    }
+                }.filterNotNull()
+
+        val savedRecipe =
+            recipe.copy(
+                id = id,
+                sections =
+                    recipe.sections.map { section ->
+                        section.copy(
+                            ingredients = section.ingredients.map { it.copy(id = 0L) },
+                            steps = section.steps.map { it.copy(id = 0L) },
+                        )
+                    },
+                tags = resolvedTags,
+            )
         recipes.add(savedRecipe)
 
         recipesFlow.value = recipes.toList()
@@ -170,6 +172,5 @@ class FakeRecipeRepository : RecipeRepository {
 
     override suspend fun getAllRecipes(): List<Recipe> = recipes.toList()
 
-    override fun observeMeasurementUnits(): Flow<List<MeasurementUnit>> =
-        MutableStateFlow(emptyList())
+    override fun observeMeasurementUnits(): Flow<List<MeasurementUnit>> = MutableStateFlow(emptyList())
 }
