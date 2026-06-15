@@ -40,7 +40,7 @@ class SettingsViewModel
         private val importBackup: ImportRecipesBackupUseCase,
         private val backupFileReader: AndroidBackupFileReader,
         private val appPreferences: AppPreferences,
-        @ApplicationContext private val context: Context,
+        @param:ApplicationContext private val context: Context,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SettingsUiState())
         val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -88,7 +88,7 @@ class SettingsViewModel
             context: Context,
         ) {
             viewModelScope.launch {
-                _uiState.value = SettingsUiState(isExporting = true)
+                _uiState.update { it.copy(isExporting = true, message = null) }
                 try {
                     val json = withContext(Dispatchers.IO) { exportBackup() }
                     withContext(Dispatchers.IO) {
@@ -96,9 +96,19 @@ class SettingsViewModel
                             it.write(json.toByteArray())
                         }
                     }
-                    _uiState.value = SettingsUiState(message = context.getString(R.string.export_success))
-                } catch (e: Exception) {
-                    _uiState.value = SettingsUiState(message = context.getString(R.string.export_error_detail, e.message ?: ""))
+                    _uiState.update {
+                        it.copy(
+                            isExporting = false,
+                            message = context.getString(R.string.export_success),
+                        )
+                    }
+                } catch (_: Exception) {
+                    _uiState.update {
+                        it.copy(
+                            isExporting = false,
+                            message = context.getString(R.string.export_error_message),
+                        )
+                    }
                 }
             }
         }
@@ -108,21 +118,31 @@ class SettingsViewModel
             context: Context,
         ) {
             viewModelScope.launch {
-                _uiState.value = SettingsUiState(isImporting = true)
+                _uiState.update { it.copy(isImporting = true, message = null) }
                 try {
                     val content = withContext(Dispatchers.IO) { backupFileReader.read(uri) }
                     importBackup(content)
                     val successMsg = context.getString(R.string.import_success)
-                    _uiState.value = SettingsUiState(message = successMsg)
+                    _uiState.update {
+                        it.copy(
+                            isImporting = false,
+                            message = successMsg,
+                        )
+                    }
                     Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    _uiState.value = SettingsUiState(message = context.getString(R.string.import_error_detail, e.message ?: ""))
+                } catch (_: Exception) {
+                    _uiState.update {
+                        it.copy(
+                            isImporting = false,
+                            message = context.getString(R.string.import_error_message),
+                        )
+                    }
                 }
             }
         }
 
         fun clearMessage() {
-            _uiState.value = _uiState.value.copy(message = null)
+            _uiState.update { it.copy(message = null) }
         }
 
         fun onUnitSystemChange(unit: String) {

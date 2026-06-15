@@ -1,27 +1,30 @@
 package com.diaszano.pratoo.ui.recipeedit
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -30,9 +33,13 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FilterChip
@@ -44,6 +51,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -55,13 +63,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.diaszano.pratoo.R
+import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
+import com.diaszano.pratoo.ui.shared.ErrorState
+import com.diaszano.pratoo.ui.shared.LoadingState
 import com.diaszano.pratoo.ui.theme.LocalAppColors
+import com.diaszano.pratoo.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -72,7 +86,7 @@ fun RecipeEditScreen(
     viewModel: RecipeEditViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val appColors = LocalAppColors.current
+    val loadErrorResId = uiState.loadErrorResId
 
     val photoPickerLauncher =
         rememberLauncherForActivityResult(
@@ -81,23 +95,34 @@ fun RecipeEditScreen(
             uri?.let { viewModel.onImageSelected(it) }
         }
 
+    fun requestBack() {
+        if (uiState.hasUnsavedChanges) {
+            viewModel.onRequestNavigateBack()
+        } else {
+            onNavigateBack()
+        }
+    }
+
+    BackHandler(enabled = uiState.hasUnsavedChanges) {
+        viewModel.onRequestNavigateBack()
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        if (uiState.isLoaded &&
-                            uiState.title.isNotBlank()
-                        ) {
+                        if (uiState.isLoaded && uiState.title.isNotBlank()) {
                             uiState.title
                         } else {
                             stringResource(R.string.add_recipe)
                         },
+                        maxLines = 1,
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { requestBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cancel))
                     }
                 },
@@ -109,399 +134,587 @@ fun RecipeEditScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                enabled = !uiState.isSaving,
+                        .padding(Spacing.lg),
+                enabled = uiState.isLoaded && uiState.loadErrorResId == null && !uiState.isSaving,
             ) {
-                Text(stringResource(R.string.save_recipe))
+                if (uiState.isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    Spacer(Modifier.width(Spacing.sm))
+                } else {
+                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(Spacing.sm))
+                }
+                Text(
+                    if (uiState.isSaving) {
+                        stringResource(R.string.saving_recipe)
+                    } else {
+                        stringResource(R.string.save_recipe)
+                    },
+                )
             }
         },
     ) { padding ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-        ) {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(16f / 9f)
-                        .clip(MaterialTheme.shapes.medium)
-                        .clickable {
-                            photoPickerLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                            )
-                        },
-                contentAlignment = Alignment.Center,
-            ) {
-                if (uiState.imageUri != null) {
-                    AsyncImage(
-                        model = uiState.imageUri,
-                        contentDescription = stringResource(R.string.photo),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.AddAPhoto,
-                            contentDescription = stringResource(R.string.add_photo),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(48.dp),
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            stringResource(R.string.add_photo),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            FilterChip(
-                selected = uiState.isFavorite,
-                onClick = viewModel::onToggleFavorite,
-                label = { Text(stringResource(R.string.favorite)) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = if (uiState.isFavorite) appColors.favorite else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp),
-                    )
-                },
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = uiState.title,
-                onValueChange = viewModel::onTitleChange,
-                label = { Text(stringResource(R.string.title_required)) },
-                isError = uiState.titleErrorResId != null,
-                supportingText = uiState.titleErrorResId?.let { resId -> { Text(stringResource(resId)) } },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    value = uiState.servings,
-                    onValueChange = viewModel::onServingsChange,
-                    label = { Text(stringResource(R.string.servings)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(8.dp))
-                OutlinedTextField(
-                    value = uiState.prepTimeMinutes,
-                    onValueChange = viewModel::onPrepTimeChange,
-                    label = { Text(stringResource(R.string.prep_time) + " (${stringResource(R.string.minutes_short)})") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(8.dp))
-                OutlinedTextField(
-                    value = uiState.cookTimeMinutes,
-                    onValueChange = viewModel::onCookTimeChange,
-                    label = { Text(stringResource(R.string.cook_time) + " (${stringResource(R.string.minutes_short)})") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f),
+        when {
+            !uiState.isLoaded -> {
+                LoadingState(
+                    message = stringResource(R.string.loading_recipe),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding),
                 )
             }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-            uiState.sections.forEachIndexed { sectionIndex, section ->
-                if (uiState.sections.size > 1 || section.name.isNotBlank() || sectionIndex > 0) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        OutlinedTextField(
-                            value = section.name,
-                            onValueChange = { viewModel.onSectionNameChange(sectionIndex, it) },
-                            label = { Text(stringResource(R.string.recipe_section_name)) },
-                            placeholder = { Text(stringResource(R.string.recipe_section_name_hint)) },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (uiState.sections.size > 1) {
-                            Spacer(Modifier.width(8.dp))
-                            IconButton(onClick = { viewModel.onRemoveSection(sectionIndex) }) {
-                                Icon(Icons.Default.Close, stringResource(R.string.remove_recipe_section))
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(4.dp))
-                }
-
-                Text(stringResource(R.string.section_ingredients), style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-
-                section.ingredients.forEachIndexed { ingredientIndex, ingredient ->
-                    IngredientRow(
-                        sectionIndex = sectionIndex,
-                        ingredientIndex = ingredientIndex,
-                        ingredient = ingredient,
-                        units = uiState.measurementUnits,
-                        onNameChange = {
-                            viewModel.onIngredientChange(
-                                sectionIndex,
-                                ingredientIndex,
-                                it,
-                                ingredient.quantity,
-                                ingredient.unit,
-                            )
-                        },
-                        onQuantityChange = {
-                            viewModel.onIngredientChange(
-                                sectionIndex,
-                                ingredientIndex,
-                                ingredient.name,
-                                it,
-                                ingredient.unit,
-                            )
-                        },
-                        onUnitChange = {
-                            viewModel.onIngredientChange(
-                                sectionIndex,
-                                ingredientIndex,
-                                ingredient.name,
-                                ingredient.quantity,
-                                it,
-                            )
-                        },
-                        onRemove = { viewModel.onRemoveIngredient(sectionIndex, ingredientIndex) },
-                    )
-                    Spacer(Modifier.height(4.dp))
-                }
-                OutlinedButton(
-                    onClick = { viewModel.onAddIngredient(sectionIndex) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(stringResource(R.string.add_ingredient))
-                }
-
-                Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.section_steps), style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(8.dp))
-
-                section.steps.forEachIndexed { stepIndex, step ->
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                        Text(
-                            "${stepIndex + 1}.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(top = 16.dp),
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        OutlinedTextField(
-                            value = step.text,
-                            onValueChange = { viewModel.onStepChange(sectionIndex, stepIndex, it) },
-                            label = { Text("${stringResource(R.string.step_label)} ${stepIndex + 1}") },
-                            modifier =
-                                Modifier
-                                    .weight(1f)
-                                    .height(80.dp),
-                        )
-                        Column {
-                            IconButton(
-                                onClick = { viewModel.onMoveStepUp(sectionIndex, stepIndex) },
-                                enabled = stepIndex > 0,
-                            ) {
-                                Icon(Icons.Default.ArrowUpward, stringResource(R.string.move_up), modifier = Modifier.size(18.dp))
-                            }
-                            IconButton(
-                                onClick = { viewModel.onMoveStepDown(sectionIndex, stepIndex) },
-                                enabled = stepIndex < section.steps.lastIndex,
-                            ) {
-                                Icon(Icons.Default.ArrowDownward, stringResource(R.string.move_down), modifier = Modifier.size(18.dp))
-                            }
-                            IconButton(onClick = { viewModel.onRemoveStep(sectionIndex, stepIndex) }) {
-                                Icon(Icons.Default.Close, stringResource(R.string.remove))
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(4.dp))
-                }
-                OutlinedButton(
-                    onClick = { viewModel.onAddStep(sectionIndex) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(stringResource(R.string.add_step))
-                }
-
-                if (sectionIndex < uiState.sections.lastIndex) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                }
+            loadErrorResId != null -> {
+                ErrorState(
+                    message = stringResource(loadErrorResId),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                )
             }
-
-            Spacer(Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = viewModel::onAddSection,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.add_recipe_section))
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-            Text(stringResource(R.string.tags_label), style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
-
-            if (uiState.allTags.isNotEmpty()) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
+            else -> {
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                    contentPadding =
+                        PaddingValues(
+                            start = Spacing.lg,
+                            top = Spacing.lg,
+                            end = Spacing.lg,
+                            bottom = 104.dp,
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.lg),
                 ) {
-                    uiState.allTags.forEach { tag ->
-                        FilterChip(
-                            selected = tag.id in uiState.selectedTagIds,
-                            onClick = { viewModel.onToggleTag(tag.id) },
-                            label = { Text(tag.name) },
-                            trailingIcon = {
-                                IconButton(
-                                    onClick = { viewModel.onDeleteTag(tag.id) },
-                                    modifier = Modifier.size(18.dp),
-                                ) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = stringResource(R.string.delete),
-                                        modifier = Modifier.size(14.dp),
-                                    )
-                                }
+                    item {
+                        RecipeImagePicker(
+                            imageUri = uiState.imageUri,
+                            onPickImage = {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                )
                             },
                         )
                     }
+
+                    item {
+                        FavoriteChip(
+                            selected = uiState.isFavorite,
+                            onClick = viewModel::onToggleFavorite,
+                        )
+                    }
+
+                    item {
+                        BasicInfoFields(
+                            uiState = uiState,
+                            onTitleChange = viewModel::onTitleChange,
+                            onServingsChange = viewModel::onServingsChange,
+                            onPrepTimeChange = viewModel::onPrepTimeChange,
+                            onCookTimeChange = viewModel::onCookTimeChange,
+                        )
+                    }
+
+                    item {
+                        HorizontalDivider()
+                    }
+
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                            Text(
+                                text = stringResource(R.string.recipe_content),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            uiState.contentErrorResId?.let { errorResId ->
+                                FieldErrorText(errorResId)
+                            }
+                        }
+                    }
+
+                    itemsIndexed(
+                        items = uiState.sections,
+                        key = { index, _ -> "section_$index" },
+                    ) { sectionIndex, section ->
+                        RecipeSectionCard(
+                            sectionIndex = sectionIndex,
+                            section = section,
+                            showSectionHeader =
+                                uiState.sections.size > 1 ||
+                                    section.name.isNotBlank() ||
+                                    sectionIndex > 0,
+                            canRemoveSection = uiState.sections.size > 1,
+                            measurementUnits = uiState.measurementUnits,
+                            sectionNameErrorResId = uiState.sectionNameErrors[sectionIndex],
+                            sectionContentErrorResId = uiState.sectionContentErrors[sectionIndex],
+                            ingredientNameErrors = uiState.ingredientNameErrors,
+                            stepTextErrors = uiState.stepTextErrors,
+                            onSectionNameChange = { viewModel.onSectionNameChange(sectionIndex, it) },
+                            onRemoveSection = { viewModel.onRemoveSection(sectionIndex) },
+                            onIngredientNameChange = { ingredientIndex, name ->
+                                val ingredient = section.ingredients[ingredientIndex]
+                                viewModel.onIngredientChange(
+                                    sectionIndex,
+                                    ingredientIndex,
+                                    name,
+                                    ingredient.quantity,
+                                    ingredient.unit,
+                                )
+                            },
+                            onIngredientQuantityChange = { ingredientIndex, quantity ->
+                                val ingredient = section.ingredients[ingredientIndex]
+                                viewModel.onIngredientChange(
+                                    sectionIndex,
+                                    ingredientIndex,
+                                    ingredient.name,
+                                    quantity,
+                                    ingredient.unit,
+                                )
+                            },
+                            onIngredientUnitChange = { ingredientIndex, unit ->
+                                val ingredient = section.ingredients[ingredientIndex]
+                                viewModel.onIngredientChange(
+                                    sectionIndex,
+                                    ingredientIndex,
+                                    ingredient.name,
+                                    ingredient.quantity,
+                                    unit,
+                                )
+                            },
+                            onRemoveIngredient = { viewModel.onRemoveIngredient(sectionIndex, it) },
+                            onAddIngredient = { viewModel.onAddIngredient(sectionIndex) },
+                            onStepChange = { stepIndex, text -> viewModel.onStepChange(sectionIndex, stepIndex, text) },
+                            onRemoveStep = { viewModel.onRemoveStep(sectionIndex, it) },
+                            onMoveStepUp = { viewModel.onMoveStepUp(sectionIndex, it) },
+                            onMoveStepDown = { viewModel.onMoveStepDown(sectionIndex, it) },
+                            onAddStep = { viewModel.onAddStep(sectionIndex) },
+                        )
+                    }
+
+                    item {
+                        OutlinedButton(
+                            onClick = viewModel::onAddSection,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(Spacing.sm))
+                            Text(stringResource(R.string.add_recipe_section))
+                        }
+                    }
+
+                    item {
+                        TagsSection(
+                            uiState = uiState,
+                            onToggleTag = viewModel::onToggleTag,
+                            onNewTagNameChange = viewModel::onNewTagNameChange,
+                            onAddNewTag = viewModel::onAddNewTag,
+                        )
+                    }
+
+                    item {
+                        NotesAndSourceFields(
+                            notes = uiState.notes,
+                            sourceUrl = uiState.sourceUrl,
+                            sourceUrlErrorResId = uiState.sourceUrlErrorResId,
+                            onNotesChange = viewModel::onNotesChange,
+                            onSourceUrlChange = viewModel::onSourceUrlChange,
+                        )
+                    }
+
+                    uiState.saveErrorResId?.let { errorResId ->
+                        item {
+                            FieldErrorText(errorResId)
+                        }
+                    }
                 }
             }
+        }
+    }
 
-            Spacer(Modifier.height(8.dp))
+    if (uiState.showUnsavedChangesDialog) {
+        UnsavedChangesDialog(
+            onDiscard = {
+                viewModel.onDiscardChanges()
+                onNavigateBack()
+            },
+            onKeepEditing = viewModel::onDismissUnsavedChangesDialog,
+        )
+    }
+}
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+@Composable
+private fun RecipeImagePicker(
+    imageUri: String?,
+    onPickImage: () -> Unit,
+) {
+    val description =
+        if (imageUri == null) {
+            stringResource(R.string.add_photo)
+        } else {
+            stringResource(R.string.change_photo)
+        }
+
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(onClick = onPickImage),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (imageUri != null) {
+            AsyncImage(
+                model = imageUri,
+                contentDescription = stringResource(R.string.photo),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
-                OutlinedTextField(
-                    value = uiState.newTagName,
-                    onValueChange = viewModel::onNewTagNameChange,
-                    label = { Text(stringResource(R.string.new_tag)) },
-                    singleLine = true,
-                    modifier = Modifier.weight(1f),
+                Icon(
+                    Icons.Default.AddAPhoto,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(40.dp),
                 )
-                Spacer(Modifier.width(8.dp))
-                IconButton(
-                    onClick = viewModel::onAddNewTag,
-                    enabled = uiState.newTagName.isNotBlank(),
+                Text(
+                    text = stringResource(R.string.recipe_photo_placeholder),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Text(
+            text = description,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(Spacing.md),
+        )
+    }
+}
+
+@Composable
+private fun FavoriteChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val appColors = LocalAppColors.current
+
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
+            Text(
+                if (selected) {
+                    stringResource(R.string.unfavorite)
+                } else {
+                    stringResource(R.string.favorite)
+                },
+            )
+        },
+        leadingIcon = {
+            Icon(
+                Icons.Filled.Star,
+                contentDescription = null,
+                tint = if (selected) appColors.favorite else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+        },
+    )
+}
+
+@Composable
+private fun BasicInfoFields(
+    uiState: RecipeEditUiState,
+    onTitleChange: (String) -> Unit,
+    onServingsChange: (String) -> Unit,
+    onPrepTimeChange: (String) -> Unit,
+    onCookTimeChange: (String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        Text(
+            text = stringResource(R.string.recipe_basic_info),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        OutlinedTextField(
+            value = uiState.title,
+            onValueChange = onTitleChange,
+            label = { Text(stringResource(R.string.title_required)) },
+            isError = uiState.titleErrorResId != null,
+            supportingText = uiState.titleErrorResId?.let { errorResId -> { Text(stringResource(errorResId)) } },
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next,
+                ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        ) {
+            OutlinedTextField(
+                value = uiState.servings,
+                onValueChange = onServingsChange,
+                label = { Text(stringResource(R.string.servings)) },
+                isError = uiState.servingsErrorResId != null,
+                supportingText = uiState.servingsErrorResId?.let { errorResId -> { Text(stringResource(errorResId)) } },
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next,
+                    ),
+                modifier = Modifier.weight(1f),
+            )
+            OutlinedTextField(
+                value = uiState.prepTimeMinutes,
+                onValueChange = onPrepTimeChange,
+                label = { Text("${stringResource(R.string.prep_time)} (${stringResource(R.string.minutes_short)})") },
+                isError = uiState.prepTimeErrorResId != null,
+                supportingText = uiState.prepTimeErrorResId?.let { errorResId -> { Text(stringResource(errorResId)) } },
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next,
+                    ),
+                modifier = Modifier.weight(1f),
+            )
+        }
+        OutlinedTextField(
+            value = uiState.cookTimeMinutes,
+            onValueChange = onCookTimeChange,
+            label = { Text("${stringResource(R.string.cook_time)} (${stringResource(R.string.minutes_short)})") },
+            isError = uiState.cookTimeErrorResId != null,
+            supportingText = uiState.cookTimeErrorResId?.let { errorResId -> { Text(stringResource(errorResId)) } },
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Next,
+                ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecipeSectionCard(
+    sectionIndex: Int,
+    section: SectionFormItem,
+    showSectionHeader: Boolean,
+    canRemoveSection: Boolean,
+    measurementUnits: List<MeasurementUnit>,
+    @StringRes sectionNameErrorResId: Int?,
+    @StringRes sectionContentErrorResId: Int?,
+    ingredientNameErrors: Map<FormItemKey, Int>,
+    stepTextErrors: Map<FormItemKey, Int>,
+    onSectionNameChange: (String) -> Unit,
+    onRemoveSection: () -> Unit,
+    onIngredientNameChange: (Int, String) -> Unit,
+    onIngredientQuantityChange: (Int, String) -> Unit,
+    onIngredientUnitChange: (Int, String) -> Unit,
+    onRemoveIngredient: (Int) -> Unit,
+    onAddIngredient: () -> Unit,
+    onStepChange: (Int, String) -> Unit,
+    onRemoveStep: (Int) -> Unit,
+    onMoveStepUp: (Int) -> Unit,
+    onMoveStepDown: (Int) -> Unit,
+    onAddStep: () -> Unit,
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
+            if (showSectionHeader) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                 ) {
-                    Icon(Icons.Default.Add, stringResource(R.string.add_tag))
+                    OutlinedTextField(
+                        value = section.name,
+                        onValueChange = onSectionNameChange,
+                        label = { Text(stringResource(R.string.recipe_section_name)) },
+                        placeholder = { Text(stringResource(R.string.recipe_section_name_hint)) },
+                        isError = sectionNameErrorResId != null,
+                        supportingText = sectionNameErrorResId?.let { errorResId -> { Text(stringResource(errorResId)) } },
+                        singleLine = true,
+                        keyboardOptions =
+                            KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next,
+                            ),
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (canRemoveSection) {
+                        IconButton(onClick = onRemoveSection) {
+                            Icon(Icons.Default.Close, stringResource(R.string.remove_recipe_section))
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            sectionContentErrorResId?.let { errorResId ->
+                FieldErrorText(errorResId)
+            }
 
-            OutlinedTextField(
-                value = uiState.notes,
-                onValueChange = viewModel::onNotesChange,
-                label = { Text(stringResource(R.string.notes_label)) },
-                minLines = 3,
-                modifier = Modifier.fillMaxWidth(),
+            Text(
+                text =
+                    if (showSectionHeader) {
+                        stringResource(R.string.section_ingredients)
+                    } else {
+                        stringResource(R.string.ingredients_label)
+                    },
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
             )
 
-            Spacer(Modifier.height(16.dp))
+            section.ingredients.forEachIndexed { ingredientIndex, ingredient ->
+                IngredientInputRow(
+                    ingredient = ingredient,
+                    units = measurementUnits,
+                    nameErrorResId = ingredientNameErrors[FormItemKey(sectionIndex, ingredientIndex)],
+                    onNameChange = { onIngredientNameChange(ingredientIndex, it) },
+                    onQuantityChange = { onIngredientQuantityChange(ingredientIndex, it) },
+                    onUnitChange = { onIngredientUnitChange(ingredientIndex, it) },
+                    onRemove = { onRemoveIngredient(ingredientIndex) },
+                )
+            }
 
-            OutlinedTextField(
-                value = uiState.sourceUrl,
-                onValueChange = viewModel::onSourceUrlChange,
-                label = { Text(stringResource(R.string.source_url)) },
-                singleLine = true,
+            OutlinedButton(
+                onClick = onAddIngredient,
                 modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(Spacing.sm))
+                Text(stringResource(R.string.add_ingredient))
+            }
+
+            HorizontalDivider()
+
+            Text(
+                text =
+                    if (showSectionHeader) {
+                        stringResource(R.string.section_steps)
+                    } else {
+                        stringResource(R.string.steps_label)
+                    },
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
             )
 
-            Spacer(Modifier.height(80.dp))
+            section.steps.forEachIndexed { stepIndex, step ->
+                StepInputRow(
+                    index = stepIndex,
+                    step = step,
+                    errorResId = stepTextErrors[FormItemKey(sectionIndex, stepIndex)],
+                    isFirst = stepIndex == 0,
+                    isLast = stepIndex == section.steps.lastIndex,
+                    onTextChange = { onStepChange(stepIndex, it) },
+                    onMoveUp = { onMoveStepUp(stepIndex) },
+                    onMoveDown = { onMoveStepDown(stepIndex) },
+                    onRemove = { onRemoveStep(stepIndex) },
+                )
+            }
+
+            OutlinedButton(
+                onClick = onAddStep,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(Spacing.sm))
+                Text(stringResource(R.string.add_step))
+            }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun IngredientRow(
-    sectionIndex: Int,
-    ingredientIndex: Int,
+private fun IngredientInputRow(
     ingredient: IngredientFormItem,
-    units: List<com.diaszano.pratoo.recipe.domain.model.MeasurementUnit>,
+    units: List<MeasurementUnit>,
+    @StringRes nameErrorResId: Int?,
     onNameChange: (String) -> Unit,
     onQuantityChange: (String) -> Unit,
     onUnitChange: (String) -> Unit,
     onRemove: () -> Unit,
 ) {
     var unitExpanded by remember { mutableStateOf(false) }
+    val groupedUnits = remember(units) { units.groupBy { it.category } }
 
-    val groupedUnits =
-        remember(units) {
-            units.groupBy { it.category }
-        }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             OutlinedTextField(
                 value = ingredient.name,
                 onValueChange = onNameChange,
                 label = { Text(stringResource(R.string.name_label)) },
+                isError = nameErrorResId != null,
+                supportingText = nameErrorResId?.let { errorResId -> { Text(stringResource(errorResId)) } },
                 singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                    ),
                 modifier = Modifier.weight(1f),
             )
-            Spacer(Modifier.width(8.dp))
             IconButton(onClick = onRemove) {
                 Icon(Icons.Default.Close, stringResource(R.string.remove))
             }
         }
-        Spacer(Modifier.height(4.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             OutlinedTextField(
                 value = ingredient.quantity,
                 onValueChange = onQuantityChange,
                 label = { Text(stringResource(R.string.quantity_label)) },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                    ),
                 modifier = Modifier.weight(1f),
             )
-            Spacer(Modifier.width(8.dp))
             ExposedDropdownMenuBox(
                 expanded = unitExpanded,
                 onExpandedChange = { unitExpanded = !unitExpanded },
                 modifier = Modifier.weight(1f),
             ) {
                 OutlinedTextField(
-                    value = ingredient.unit.ifEmpty { "" },
+                    value = ingredient.unit,
                     onValueChange = onUnitChange,
                     label = { Text(stringResource(R.string.unit_label)) },
                     singleLine = true,
                     readOnly = true,
-                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
+                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, contentDescription = null) },
                     modifier = Modifier.menuAnchor(),
                 )
                 ExposedDropdownMenu(
@@ -522,12 +735,7 @@ private fun IngredientRow(
                         )
                         categoryUnits.forEach { unit ->
                             DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        unit.displayName,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                },
+                                text = { Text(unit.displayName) },
                                 onClick = {
                                     onUnitChange(unit.abbreviation)
                                     unitExpanded = false
@@ -539,4 +747,190 @@ private fun IngredientRow(
             }
         }
     }
+}
+
+@Composable
+private fun StepInputRow(
+    index: Int,
+    step: StepFormItem,
+    @StringRes errorResId: Int?,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onTextChange: (String) -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        Text(
+            text = "${index + 1}.",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 18.dp),
+        )
+        OutlinedTextField(
+            value = step.text,
+            onValueChange = onTextChange,
+            label = { Text("${stringResource(R.string.step_label)} ${index + 1}") },
+            isError = errorResId != null,
+            supportingText = errorResId?.let { resId -> { Text(stringResource(resId)) } },
+            minLines = 2,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next,
+                ),
+            modifier = Modifier.weight(1f),
+        )
+        Column {
+            IconButton(
+                onClick = onMoveUp,
+                enabled = !isFirst,
+            ) {
+                Icon(Icons.Default.ArrowUpward, stringResource(R.string.move_up), modifier = Modifier.size(18.dp))
+            }
+            IconButton(
+                onClick = onMoveDown,
+                enabled = !isLast,
+            ) {
+                Icon(Icons.Default.ArrowDownward, stringResource(R.string.move_down), modifier = Modifier.size(18.dp))
+            }
+            IconButton(onClick = onRemove) {
+                Icon(Icons.Default.Close, stringResource(R.string.remove), modifier = Modifier.size(18.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TagsSection(
+    uiState: RecipeEditUiState,
+    onToggleTag: (Long) -> Unit,
+    onNewTagNameChange: (String) -> Unit,
+    onAddNewTag: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        Text(
+            text = stringResource(R.string.tags_label),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+
+        if (uiState.allTags.isNotEmpty()) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                uiState.allTags.forEach { tag ->
+                    FilterChip(
+                        selected = tag.id in uiState.selectedTagIds,
+                        onClick = { onToggleTag(tag.id) },
+                        label = { Text(tag.name) },
+                    )
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        ) {
+            OutlinedTextField(
+                value = uiState.newTagName,
+                onValueChange = onNewTagNameChange,
+                label = { Text(stringResource(R.string.new_tag)) },
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                    ),
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(
+                onClick = onAddNewTag,
+                enabled = uiState.newTagName.isNotBlank(),
+            ) {
+                Icon(Icons.Default.Add, stringResource(R.string.add_tag))
+            }
+        }
+    }
+}
+
+@Composable
+private fun NotesAndSourceFields(
+    notes: String,
+    sourceUrl: String,
+    @StringRes sourceUrlErrorResId: Int?,
+    onNotesChange: (String) -> Unit,
+    onSourceUrlChange: (String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        OutlinedTextField(
+            value = notes,
+            onValueChange = onNotesChange,
+            label = { Text(stringResource(R.string.notes_label)) },
+            minLines = 3,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Default,
+                ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        OutlinedTextField(
+            value = sourceUrl,
+            onValueChange = onSourceUrlChange,
+            label = { Text(stringResource(R.string.source_url)) },
+            isError = sourceUrlErrorResId != null,
+            supportingText = sourceUrlErrorResId?.let { errorResId -> { Text(stringResource(errorResId)) } },
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Done,
+                ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun FieldErrorText(
+    @StringRes errorResId: Int,
+) {
+    Text(
+        text = stringResource(errorResId),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.error,
+    )
+}
+
+@Composable
+private fun UnsavedChangesDialog(
+    onDiscard: () -> Unit,
+    onKeepEditing: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onKeepEditing,
+        title = { Text(stringResource(R.string.recipe_unsaved_changes_title)) },
+        text = { Text(stringResource(R.string.recipe_unsaved_changes_message)) },
+        confirmButton = {
+            TextButton(onClick = onDiscard) {
+                Text(stringResource(R.string.discard_changes))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onKeepEditing) {
+                Text(stringResource(R.string.keep_editing))
+            }
+        },
+    )
 }

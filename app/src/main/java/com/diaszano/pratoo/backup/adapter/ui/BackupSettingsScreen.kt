@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
@@ -110,7 +112,7 @@ fun BackupSettingsScreen(
                         CircularProgressIndicator()
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = stringResource(R.string.backup_in_progress),
+                            text = stringResource(R.string.loading_backups),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     }
@@ -156,6 +158,7 @@ fun BackupSettingsScreen(
                 Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
         ) {
             // Restore in progress indicator
@@ -364,7 +367,7 @@ private fun BackupFileItem(
             }
             if (backup.backupVersion != null) {
                 Text(
-                    "v${backup.backupVersion}",
+                    stringResource(R.string.backup_file_version, backup.backupVersion),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
