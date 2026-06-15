@@ -5,8 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "measurement_units")
 data class MeasurementUnit(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val abbreviation: String,
     val displayName: String,
     val category: String
