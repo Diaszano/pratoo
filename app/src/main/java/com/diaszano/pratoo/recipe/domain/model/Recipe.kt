@@ -14,5 +14,5 @@ data class Recipe(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val sections: List<RecipeSection> = emptyList(),
-    val tags: List<Tag> = emptyList()
+    val tags: List<Tag> = emptyList(),
 )

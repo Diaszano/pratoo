@@ -6,5 +6,5 @@ data class Ingredient(
     val name: String,
     val quantity: String = "",
     val unit: String = "",
-    val position: Int = 0
+    val position: Int = 0,
 )

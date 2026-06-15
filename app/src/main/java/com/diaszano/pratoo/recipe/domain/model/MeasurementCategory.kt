@@ -5,5 +5,5 @@ data class MeasurementCategory(
     val id: Long,
     val code: String,
     val displayName: String,
-    val sortOrder: Int
+    val sortOrder: Int,
 )

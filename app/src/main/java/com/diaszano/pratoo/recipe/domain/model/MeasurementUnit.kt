@@ -5,5 +5,5 @@ data class MeasurementUnit(
     val id: Long = 0,
     val abbreviation: String,
     val displayName: String,
-    val category: MeasurementCategory
+    val category: MeasurementCategory,
 )

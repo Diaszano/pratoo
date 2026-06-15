@@ -6,5 +6,5 @@ data class RecipeListItem(
     val title: String,
     val imageUri: String? = null,
     val isFavorite: Boolean = false,
-    val updatedAt: Long = 0L
+    val updatedAt: Long = 0L,
 )

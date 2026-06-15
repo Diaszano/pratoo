@@ -13,25 +13,28 @@ import com.diaszano.pratoo.recipe.domain.model.Tag
  * Internal names are in English; the resolved message is in the device locale.
  */
 sealed interface RecipeValidationError {
-
     data object EmptyTitle : RecipeValidationError
+
     data object InvalidServings : RecipeValidationError
+
     data object NegativePrepTime : RecipeValidationError
+
     data object NegativeCookTime : RecipeValidationError
+
     data object EmptyIngredientName : RecipeValidationError
 
     /** Returns the `@StringRes` identifier for the localized message. */
-    fun toLocalizedMessageRes(): Int = when (this) {
-        is EmptyTitle -> R.string.validation_empty_title
-        is InvalidServings -> R.string.validation_invalid_servings
-        is NegativePrepTime -> R.string.validation_negative_prep_time
-        is NegativeCookTime -> R.string.validation_negative_cook_time
-        is EmptyIngredientName -> R.string.validation_empty_ingredient_name
-    }
+    fun toLocalizedMessageRes(): Int =
+        when (this) {
+            is EmptyTitle -> R.string.validation_empty_title
+            is InvalidServings -> R.string.validation_invalid_servings
+            is NegativePrepTime -> R.string.validation_negative_prep_time
+            is NegativeCookTime -> R.string.validation_negative_cook_time
+            is EmptyIngredientName -> R.string.validation_empty_ingredient_name
+        }
 }
 
 object RecipeValidator {
-
     fun validate(recipe: Recipe): List<RecipeValidationError> {
         val errors = mutableListOf<RecipeValidationError>()
 
@@ -47,9 +50,10 @@ object RecipeValidator {
         if (recipe.cookTimeMinutes < 0) {
             errors.add(RecipeValidationError.NegativeCookTime)
         }
-        val hasBlankIngredient = recipe.sections.any { section ->
-            section.ingredients.any { it.name.isBlank() }
-        }
+        val hasBlankIngredient =
+            recipe.sections.any { section ->
+                section.ingredients.any { it.name.isBlank() }
+            }
         if (hasBlankIngredient) {
             errors.add(RecipeValidationError.EmptyIngredientName)
         }
@@ -66,7 +70,7 @@ object RecipeValidator {
                     name = ingredient.name.trim(),
                     quantity = ingredient.quantity.trim(),
                     unit = ingredient.unit.trim(),
-                    position = index
+                    position = index,
                 )
             }
 
@@ -77,7 +81,7 @@ object RecipeValidator {
                 step.copy(
                     id = 0L,
                     text = step.text.trim(),
-                    order = index
+                    order = index,
                 )
             }
 

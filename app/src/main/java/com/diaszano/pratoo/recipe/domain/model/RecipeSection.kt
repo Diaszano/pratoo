@@ -6,5 +6,5 @@ data class RecipeSection(
     val name: String = "",
     val position: Int = 0,
     val ingredients: List<Ingredient> = emptyList(),
-    val steps: List<RecipeStep> = emptyList()
+    val steps: List<RecipeStep> = emptyList(),
 )
