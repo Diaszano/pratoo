@@ -1,60 +1,75 @@
-# Built application files
+# ── Built application files ────────────────────────────────────────
 *.apk
 *.ap_
 *.aab
-
-# Files for the ART/Dalvik VM
 *.dex
-
-# Java class files
 *.class
+*.jar
 
-# Generated files
+# ── Generated files ────────────────────────────────────────────────
 bin/
 gen/
 /out/
 
-# Gradle files
+# ── Gradle ─────────────────────────────────────────────────────────
 .gradle/
 build/
+!gradle/wrapper/gradle-wrapper.jar
 
-# Local configuration file
+# ── Local configuration (secrets) ──────────────────────────────────
 local.properties
+secrets.properties
+*.jks
+*.keystore
+google-services.json
 
-# Android Studio
+# ── Environment ────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+
+# ── IDE ────────────────────────────────────────────────────────────
 *.iml
 .idea/
 .navigation/
 captures/
 .externalNativeBuild/
 .cxx/
+*.swp
+*.swo
+*~
 
-# Proguard
-app/proguard/
+# ── OS files ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-# Room schemas
-app/schemas/
+# ── Logs and crash reports ─────────────────────────────────────────
+*.log
+crashlytics-*.json
+firebase-crashreporter-*.json
 
-# Local agent metadata
+# ── Agent metadata (local AI tooling) ──────────────────────────────
 .mimocode/
 .opencode/
 .goopspec/
+.omo/
+.serena/
 
-# Git worktrees
+# ── Git worktrees ──────────────────────────────────────────────────
 .worktrees/
 
-# Kotlin
+# ── Kotlin ─────────────────────────────────────────────────────────
 .kotlin/
 
-# Google Services (if added later)
-google-services.json
+# ── Room schema exports ────────────────────────────────────────────
+app/schemas/
 
-# Signing
-*.jks
-*.keystore
+# ── Proguard ───────────────────────────────────────────────────────
+app/proguard/
 
-# OS files
-.DS_Store
-Thumbs.db
-.omo
-.serena
+# ── Android Studio / Lint reports ──────────────────────────────────
+lint-report.html
+lint-results-*.xml
+lint-baseline.xml
+reports/
