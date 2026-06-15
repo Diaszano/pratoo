@@ -1,11 +1,10 @@
 package com.diaszano.pratoo.data.repository
 
-import com.diaszano.pratoo.data.local.entity.IngredientEntity
-import com.diaszano.pratoo.data.local.entity.RecipeEntity
-import com.diaszano.pratoo.data.local.entity.StepEntity
-import com.diaszano.pratoo.data.local.entity.TagEntity
-import com.diaszano.pratoo.data.local.relation.RecipeWithDetails
-import kotlinx.coroutines.flow.first
+import com.diaszano.pratoo.recipe.adapter.out.backup.JsonRecipeBackupCodec
+import com.diaszano.pratoo.recipe.domain.model.Ingredient
+import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeStep
+import com.diaszano.pratoo.recipe.domain.model.Tag
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -16,43 +15,33 @@ import org.junit.Test
 class BackupManagerTest {
 
     private lateinit var repository: FakeRecipeRepository
+    private lateinit var codec: JsonRecipeBackupCodec
 
     @Before
     fun setup() {
         repository = FakeRecipeRepository()
+        codec = JsonRecipeBackupCodec()
     }
 
     @Test
     fun `backup version constant is correct`() {
-        assertEquals(1, BackupManager.BACKUP_VERSION)
+        assertEquals(1, JsonRecipeBackupCodec.BACKUP_VERSION)
     }
 
     @Test
     fun `save recipe with favorite persists favorite state`() = runTest {
         val id = repository.saveRecipe(
-            RecipeWithDetails(
-                recipe = RecipeEntity(title = "Fav", isFavorite = true),
-                ingredients = emptyList(),
-                steps = emptyList(),
-                tags = emptyList()
-            ),
-            emptyList()
+            Recipe(title = "Fav", isFavorite = true)
         )
         val saved = repository.getRecipe(id)
         assertNotNull(saved)
-        assertTrue(saved!!.recipe.isFavorite)
+        assertTrue(saved!!.isFavorite)
     }
 
     @Test
     fun `save recipe with tags persists tag associations`() = runTest {
         val id = repository.saveRecipe(
-            RecipeWithDetails(
-                recipe = RecipeEntity(title = "Tagged"),
-                ingredients = emptyList(),
-                steps = emptyList(),
-                tags = emptyList()
-            ),
-            listOf(TagEntity(name = "Doce"), TagEntity(name = "Rapida"))
+            Recipe(title = "Tagged", tags = listOf(Tag(name = "Doce"), Tag(name = "Rapida")))
         )
         val saved = repository.getRecipe(id)
         assertNotNull(saved)
@@ -60,74 +49,99 @@ class BackupManagerTest {
     }
 
     @Test
-    fun `getAllRecipesWithDetails returns complete recipes`() = runTest {
+    fun `getAllRecipes returns complete recipes`() = runTest {
         repository.saveRecipe(
-            RecipeWithDetails(
-                recipe = RecipeEntity(title = "R1"),
-                ingredients = listOf(IngredientEntity(recipeId = 0, name = "Farinha", quantity = "200g")),
-                steps = listOf(StepEntity(recipeId = 0, text = "Misturar")),
-                tags = emptyList()
-            ),
-            listOf(TagEntity(name = "Sobremesa"))
+            Recipe(
+                title = "R1",
+                ingredients = listOf(Ingredient(name = "Farinha", quantity = "200g")),
+                steps = listOf(RecipeStep(text = "Misturar")),
+                tags = listOf(Tag(name = "Sobremesa"))
+            )
         )
 
-        val all = repository.getAllRecipesWithDetails()
+        val all = repository.getAllRecipes()
         assertEquals(1, all.size)
-        assertEquals("R1", all[0].recipe.title)
+        assertEquals("R1", all[0].title)
         assertEquals(1, all[0].ingredients.size)
         assertEquals(1, all[0].steps.size)
         assertEquals(1, all[0].tags.size)
     }
 
     @Test
-    fun `restore from backup data recreates recipes`() = runTest {
+    fun `codec encode and decode preserves recipes`() = runTest {
         val recipes = listOf(
-            RecipeWithDetails(
-                recipe = RecipeEntity(title = "Bolo", isFavorite = true, sourceUrl = "https://example.com"),
-                ingredients = listOf(IngredientEntity(recipeId = 0, name = "Acucar", quantity = "100g")),
-                steps = listOf(StepEntity(recipeId = 0, text = "Pre aquecer forno")),
-                tags = emptyList()
+            Recipe(
+                title = "Bolo",
+                isFavorite = true,
+                sourceUrl = "https://example.com",
+                ingredients = listOf(Ingredient(name = "Acucar", quantity = "100g")),
+                steps = listOf(RecipeStep(text = "Pre aquecer forno")),
+                tags = listOf(Tag(name = "Doce"))
             ),
-            RecipeWithDetails(
-                recipe = RecipeEntity(title = "Salada"),
-                ingredients = listOf(IngredientEntity(recipeId = 0, name = "Tomate", quantity = "2")),
-                steps = listOf(StepEntity(recipeId = 0, text = "Lavar e picar")),
-                tags = emptyList()
+            Recipe(
+                title = "Salada",
+                ingredients = listOf(Ingredient(name = "Tomate", quantity = "2")),
+                steps = listOf(RecipeStep(text = "Lavar e picar"))
             )
         )
 
-        recipes.forEach { recipe ->
-            repository.saveRecipe(recipe, listOf(TagEntity(name = "Favorita")))
-        }
+        val json = codec.encode(recipes)
+        val decoded = codec.decode(json)
 
-        val restored = repository.getAllRecipesWithDetails()
-        assertEquals(2, restored.size)
+        assertEquals(2, decoded.size)
 
-        val bolo = restored.find { it.recipe.title == "Bolo" }
+        val bolo = decoded.find { it.title == "Bolo" }
         assertNotNull(bolo)
-        assertTrue(bolo!!.recipe.isFavorite)
-        assertEquals("https://example.com", bolo.recipe.sourceUrl)
+        assertTrue(bolo!!.isFavorite)
+        assertEquals("https://example.com", bolo.sourceUrl)
         assertEquals("Acucar", bolo.ingredients[0].name)
 
-        val salada = restored.find { it.recipe.title == "Salada" }
+        val salada = decoded.find { it.title == "Salada" }
         assertNotNull(salada)
         assertEquals("Tomate", salada!!.ingredients[0].name)
     }
 
     @Test
+    fun `codec validates imported data`() = runTest {
+        val recipes = listOf(
+            Recipe(
+                title = "  Bolo  ",
+                servings = -1,
+                prepTimeMinutes = -5,
+                ingredients = listOf(
+                    Ingredient(name = "Acucar", quantity = "100g"),
+                    Ingredient(name = "", quantity = "")
+                ),
+                steps = listOf(
+                    RecipeStep(text = "Passo 1"),
+                    RecipeStep(text = "")
+                ),
+                tags = listOf(Tag(name = "  Doce  "), Tag(name = "doce"))
+            )
+        )
+
+        val json = codec.encode(recipes)
+        val decoded = codec.decode(json)
+
+        assertEquals(1, decoded.size)
+        val recipe = decoded[0]
+        assertEquals("Bolo", recipe.title)
+        assertEquals(1, recipe.servings)
+        assertEquals(0, recipe.prepTimeMinutes)
+        assertEquals(1, recipe.ingredients.size)
+        assertEquals(1, recipe.steps.size)
+        assertEquals(1, recipe.tags.size)
+        assertEquals("Doce", recipe.tags[0].name)
+    }
+
+    @Test
     fun `delete all recipes clears backup`() = runTest {
-        repository.saveRecipe(
-            RecipeWithDetails(RecipeEntity(title = "R1"), emptyList(), emptyList(), emptyList()),
-            emptyList()
-        )
-        repository.saveRecipe(
-            RecipeWithDetails(RecipeEntity(title = "R2"), emptyList(), emptyList(), emptyList()),
-            emptyList()
-        )
-        assertEquals(2, repository.getAllRecipesWithDetails().size)
+        repository.saveRecipe(Recipe(title = "R1"))
+        repository.saveRecipe(Recipe(title = "R2"))
+        assertEquals(2, repository.getAllRecipes().size)
 
         repository.deleteRecipe(1)
         repository.deleteRecipe(2)
-        assertEquals(0, repository.getAllRecipesWithDetails().size)
+        assertEquals(0, repository.getAllRecipes().size)
     }
 }

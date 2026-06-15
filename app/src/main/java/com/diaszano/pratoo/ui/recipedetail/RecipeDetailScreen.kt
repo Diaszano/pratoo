@@ -78,7 +78,7 @@ fun RecipeDetailScreen(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text(uiState.recipe?.recipe?.title ?: "") },
+                title = { Text(uiState.recipe?.title ?: "") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cancel))
@@ -111,13 +111,13 @@ fun RecipeDetailScreen(
                         IconButton(onClick = { viewModel.onToggleFavorite() }) {
                             Icon(
                                 Icons.Filled.Star,
-                                contentDescription = if (recipe.recipe.isFavorite) stringResource(R.string.unfavorite) else stringResource(R.string.favorite),
-                                tint = if (recipe.recipe.isFavorite) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurfaceVariant
+                                contentDescription = if (recipe.isFavorite) stringResource(R.string.unfavorite) else stringResource(R.string.favorite),
+                                tint = if (recipe.isFavorite) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                     IconButton(onClick = {
-                        uiState.recipe?.let { onEditRecipe(it.recipe.id) }
+                        uiState.recipe?.let { onEditRecipe(it.id) }
                     }) {
                         Icon(Icons.Default.Edit, stringResource(R.string.edit))
                     }
@@ -129,7 +129,7 @@ fun RecipeDetailScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                uiState.recipe?.let { onEditRecipe(it.recipe.id) }
+                uiState.recipe?.let { onEditRecipe(it.id) }
             }) {
                 Icon(Icons.Default.Edit, stringResource(R.string.edit))
             }
@@ -143,10 +143,10 @@ fun RecipeDetailScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            if (recipe.recipe.imageUri != null) {
+            if (recipe.imageUri != null) {
                 AsyncImage(
-                    model = recipe.recipe.imageUri,
-                    contentDescription = recipe.recipe.title,
+                    model = recipe.imageUri,
+                    contentDescription = recipe.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -159,7 +159,7 @@ fun RecipeDetailScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (recipe.recipe.servings > 0) {
+                    if (recipe.servings > 0) {
                         Icon(
                             Icons.Default.People,
                             contentDescription = null,
@@ -167,13 +167,13 @@ fun RecipeDetailScreen(
                             modifier = Modifier.padding(end = 4.dp)
                         )
                         Text(
-                            "${recipe.recipe.servings} ${stringResource(R.string.servings).lowercase()}",
+                            "${recipe.servings} ${stringResource(R.string.servings).lowercase()}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(Modifier.width(16.dp))
                     }
-                    if (recipe.recipe.prepTimeMinutes > 0) {
+                    if (recipe.prepTimeMinutes > 0) {
                         Icon(
                             Icons.Default.AccessTime,
                             contentDescription = null,
@@ -181,13 +181,13 @@ fun RecipeDetailScreen(
                             modifier = Modifier.padding(end = 4.dp)
                         )
                         Text(
-                            "${recipe.recipe.prepTimeMinutes} ${stringResource(R.string.minutes_short)}",
+                            "${recipe.prepTimeMinutes} ${stringResource(R.string.minutes_short)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(Modifier.width(16.dp))
                     }
-                    if (recipe.recipe.cookTimeMinutes > 0) {
+                    if (recipe.cookTimeMinutes > 0) {
                         Icon(
                             Icons.Default.AccessTime,
                             contentDescription = null,
@@ -195,7 +195,7 @@ fun RecipeDetailScreen(
                             modifier = Modifier.padding(end = 4.dp)
                         )
                         Text(
-                            "${recipe.recipe.cookTimeMinutes} ${stringResource(R.string.minutes_short)}",
+                            "${recipe.cookTimeMinutes} ${stringResource(R.string.minutes_short)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -217,10 +217,10 @@ fun RecipeDetailScreen(
                     }
                 }
 
-                if (recipe.recipe.sourceUrl?.isNotBlank() == true) {
+                if (recipe.sourceUrl?.isNotBlank() == true) {
                     Spacer(Modifier.height(12.dp))
                     Text(
-                        "${stringResource(R.string.source_label)}: ${recipe.recipe.sourceUrl}",
+                        "${stringResource(R.string.source_label)}: ${recipe.sourceUrl}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -265,7 +265,7 @@ fun RecipeDetailScreen(
                 }
 
                 // Notes
-                if (recipe.recipe.notes.isNotBlank()) {
+                if (recipe.notes.isNotBlank()) {
                     Spacer(Modifier.height(16.dp))
                     HorizontalDivider()
                     Spacer(Modifier.height(16.dp))
@@ -276,7 +276,7 @@ fun RecipeDetailScreen(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        recipe.recipe.notes,
+                        recipe.notes,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -316,19 +316,19 @@ private fun formatIngredient(name: String, quantity: String, unit: String): Stri
     }
 }
 
-private fun formatRecipeAsText(recipe: com.diaszano.pratoo.data.local.relation.RecipeWithDetails): String {
+private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.Recipe): String {
     return buildString {
-        appendLine(recipe.recipe.title)
+        appendLine(recipe.title)
         appendLine()
 
-        val hasMeta = recipe.recipe.servings > 0 ||
-            recipe.recipe.prepTimeMinutes > 0 ||
-            recipe.recipe.cookTimeMinutes > 0
+        val hasMeta = recipe.servings > 0 ||
+            recipe.prepTimeMinutes > 0 ||
+            recipe.cookTimeMinutes > 0
         if (hasMeta) {
             val meta = mutableListOf<String>()
-            if (recipe.recipe.servings > 0) meta.add("Porcoes: ${recipe.recipe.servings}")
-            if (recipe.recipe.prepTimeMinutes > 0) meta.add("Preparo: ${recipe.recipe.prepTimeMinutes}min")
-            if (recipe.recipe.cookTimeMinutes > 0) meta.add("Cozimento: ${recipe.recipe.cookTimeMinutes}min")
+            if (recipe.servings > 0) meta.add("Porcoes: ${recipe.servings}")
+            if (recipe.prepTimeMinutes > 0) meta.add("Preparo: ${recipe.prepTimeMinutes}min")
+            if (recipe.cookTimeMinutes > 0) meta.add("Cozimento: ${recipe.cookTimeMinutes}min")
             appendLine(meta.joinToString(" | "))
             appendLine()
         }
@@ -354,9 +354,9 @@ private fun formatRecipeAsText(recipe: com.diaszano.pratoo.data.local.relation.R
             appendLine()
         }
 
-        if (recipe.recipe.notes.isNotBlank()) {
+        if (recipe.notes.isNotBlank()) {
             appendLine("*Anotacoes*")
-            appendLine(recipe.recipe.notes)
+            appendLine(recipe.notes)
         }
     }.trimEnd()
 }

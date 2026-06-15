@@ -4,8 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.diaszano.pratoo.data.local.relation.RecipeWithDetails
-import com.diaszano.pratoo.data.repository.RecipeRepository
+import com.diaszano.pratoo.recipe.application.usecase.DeleteRecipeUseCase
+import com.diaszano.pratoo.recipe.application.usecase.GetRecipeUseCase
+import com.diaszano.pratoo.recipe.application.usecase.ToggleFavoriteUseCase
+import com.diaszano.pratoo.recipe.domain.model.Recipe
 import com.diaszano.pratoo.ui.navigation.RecipeDetailRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class RecipeDetailUiState(
-    val recipe: RecipeWithDetails? = null,
+    val recipe: Recipe? = null,
     val isLoading: Boolean = false,
     val isDeleted: Boolean = false
 )
@@ -25,7 +27,9 @@ data class RecipeDetailUiState(
 @HiltViewModel
 class RecipeDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: RecipeRepository
+    getRecipe: GetRecipeUseCase,
+    private val deleteRecipe: DeleteRecipeUseCase,
+    private val toggleFavorite: ToggleFavoriteUseCase
 ) : ViewModel() {
 
     private val route: RecipeDetailRoute = savedStateHandle.toRoute<RecipeDetailRoute>()
@@ -33,7 +37,7 @@ class RecipeDetailViewModel @Inject constructor(
     private val _isDeleted = MutableStateFlow(false)
 
     val uiState: StateFlow<RecipeDetailUiState> = combine(
-        repository.observeRecipe(recipeId),
+        getRecipe.observe(recipeId),
         _isDeleted
     ) { recipe, isDeleted ->
         RecipeDetailUiState(recipe = recipe, isDeleted = isDeleted)
@@ -45,14 +49,14 @@ class RecipeDetailViewModel @Inject constructor(
 
     fun onDelete() {
         viewModelScope.launch {
-            repository.deleteRecipe(recipeId)
+            deleteRecipe(recipeId)
             _isDeleted.value = true
         }
     }
 
     fun onToggleFavorite() {
         viewModelScope.launch {
-            repository.toggleFavorite(recipeId)
+            toggleFavorite(recipeId)
         }
     }
 }

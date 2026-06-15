@@ -4,9 +4,11 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.diaszano.pratoo.data.repository.BackupManager
 import com.diaszano.pratoo.data.settings.AppPreferences
 import com.diaszano.pratoo.data.settings.ThemeMode
+import com.diaszano.pratoo.recipe.adapter.out.backup.AndroidBackupFileReader
+import com.diaszano.pratoo.recipe.application.usecase.ExportRecipesBackupUseCase
+import com.diaszano.pratoo.recipe.application.usecase.ImportRecipesBackupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +29,9 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val backupManager: BackupManager,
+    private val exportBackup: ExportRecipesBackupUseCase,
+    private val importBackup: ImportRecipesBackupUseCase,
+    private val backupFileReader: AndroidBackupFileReader,
     private val appPreferences: AppPreferences
 ) : ViewModel() {
 
@@ -51,7 +55,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = SettingsUiState(isExporting = true)
             try {
-                val json = withContext(Dispatchers.IO) { backupManager.exportToJson() }
+                val json = withContext(Dispatchers.IO) { exportBackup() }
                 withContext(Dispatchers.IO) {
                     context.contentResolver.openOutputStream(uri)?.use {
                         it.write(json.toByteArray())
@@ -68,7 +72,8 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = SettingsUiState(isImporting = true)
             try {
-                backupManager.importFromJson(context, uri)
+                val content = withContext(Dispatchers.IO) { backupFileReader.read(uri) }
+                importBackup(content)
                 _uiState.value = SettingsUiState(message = "Receitas importadas com sucesso!")
                 Toast.makeText(context, "Receitas importadas com sucesso!", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {

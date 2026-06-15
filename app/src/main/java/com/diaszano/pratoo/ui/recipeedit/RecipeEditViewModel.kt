@@ -6,13 +6,15 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.diaszano.pratoo.data.local.entity.IngredientEntity
-import com.diaszano.pratoo.data.local.entity.MeasurementUnit
-import com.diaszano.pratoo.data.local.entity.RecipeEntity
-import com.diaszano.pratoo.data.local.entity.StepEntity
-import com.diaszano.pratoo.data.local.entity.TagEntity
-import com.diaszano.pratoo.data.local.relation.RecipeWithDetails
-import com.diaszano.pratoo.data.repository.RecipeRepository
+import com.diaszano.pratoo.recipe.application.usecase.ObserveMeasurementUnitsUseCase
+import com.diaszano.pratoo.recipe.application.usecase.ObserveTagsUseCase
+import com.diaszano.pratoo.recipe.application.usecase.SaveRecipeUseCase
+import com.diaszano.pratoo.recipe.domain.model.Ingredient
+import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
+import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeStep
+import com.diaszano.pratoo.recipe.domain.model.Tag
+import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
 import com.diaszano.pratoo.ui.navigation.RecipeEditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -50,7 +52,7 @@ data class RecipeEditUiState(
     val isFavorite: Boolean = false,
     val ingredients: List<IngredientFormItem> = listOf(IngredientFormItem()),
     val steps: List<StepFormItem> = listOf(StepFormItem()),
-    val allTags: List<TagEntity> = emptyList(),
+    val allTags: List<Tag> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
     val newTagName: String = "",
     val measurementUnits: List<MeasurementUnit> = emptyList(),
@@ -62,6 +64,9 @@ data class RecipeEditUiState(
 @HiltViewModel
 class RecipeEditViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    observeTags: ObserveTagsUseCase,
+    observeMeasurementUnits: ObserveMeasurementUnitsUseCase,
+    private val saveRecipe: SaveRecipeUseCase,
     private val repository: RecipeRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -73,8 +78,8 @@ class RecipeEditViewModel @Inject constructor(
 
     val uiState: StateFlow<RecipeEditUiState> = combine(
         _uiState,
-        repository.observeAllTags(),
-        repository.observeMeasurementUnits()
+        observeTags(),
+        observeMeasurementUnits()
     ) { state, tags, units ->
         state.copy(allTags = tags, measurementUnits = units)
     }.stateIn(
@@ -91,14 +96,14 @@ class RecipeEditViewModel @Inject constructor(
                 val recipe = repository.getRecipe(recipeId) ?: return@launch
                 _uiState.update {
                     it.copy(
-                        title = recipe.recipe.title,
-                        notes = recipe.recipe.notes,
-                        imageUri = recipe.recipe.imageUri,
-                        servings = recipe.recipe.servings.toString(),
-                        prepTimeMinutes = if (recipe.recipe.prepTimeMinutes > 0) recipe.recipe.prepTimeMinutes.toString() else "",
-                        cookTimeMinutes = if (recipe.recipe.cookTimeMinutes > 0) recipe.recipe.cookTimeMinutes.toString() else "",
-                        sourceUrl = recipe.recipe.sourceUrl ?: "",
-                        isFavorite = recipe.recipe.isFavorite,
+                        title = recipe.title,
+                        notes = recipe.notes,
+                        imageUri = recipe.imageUri,
+                        servings = recipe.servings.toString(),
+                        prepTimeMinutes = if (recipe.prepTimeMinutes > 0) recipe.prepTimeMinutes.toString() else "",
+                        cookTimeMinutes = if (recipe.cookTimeMinutes > 0) recipe.cookTimeMinutes.toString() else "",
+                        sourceUrl = recipe.sourceUrl ?: "",
+                        isFavorite = recipe.isFavorite,
                         ingredients = if (recipe.ingredients.isEmpty()) {
                             listOf(IngredientFormItem())
                         } else {
@@ -295,7 +300,7 @@ class RecipeEditViewModel @Inject constructor(
 
         _uiState.update { it.copy(isSaving = true) }
 
-        val recipe = RecipeEntity(
+        val recipe = Recipe(
             id = recipeId ?: 0L,
             title = state.title.trim(),
             notes = state.notes.trim(),
@@ -305,25 +310,21 @@ class RecipeEditViewModel @Inject constructor(
             cookTimeMinutes = state.cookTimeMinutes.toIntOrNull() ?: 0,
             sourceUrl = state.sourceUrl.ifBlank { null },
             isFavorite = state.isFavorite,
-            createdAt = if (recipeId == null) System.currentTimeMillis() else 0L,
-            updatedAt = System.currentTimeMillis()
+            ingredients = state.ingredients
+                .filter { it.name.isNotBlank() }
+                .mapIndexed { index, ing ->
+                    Ingredient(name = ing.name, quantity = ing.quantity, unit = ing.unit, position = index)
+                },
+            steps = state.steps
+                .filter { it.text.isNotBlank() }
+                .mapIndexed { index, step ->
+                    RecipeStep(text = step.text, order = index)
+                },
+            tags = state.selectedTagIds.map { Tag(id = it, name = "") }
         )
 
-        val ingredients = state.ingredients
-            .filter { it.name.isNotBlank() }
-            .map { IngredientEntity(recipeId = recipeId ?: 0L, name = it.name, quantity = it.quantity, unit = it.unit) }
-
-        val steps = state.steps
-            .filter { it.text.isNotBlank() }
-            .map { StepEntity(recipeId = recipeId ?: 0L, text = it.text) }
-
-        val tags = state.selectedTagIds.map { TagEntity(id = it, name = "") }
-
         viewModelScope.launch {
-            repository.saveRecipe(
-                RecipeWithDetails(recipe, ingredients, steps, emptyList()),
-                tags
-            )
+            saveRecipe(recipe)
             onSuccess()
         }
     }

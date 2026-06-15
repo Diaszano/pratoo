@@ -1,31 +1,34 @@
 package com.diaszano.pratoo.data.repository
 
-import com.diaszano.pratoo.data.local.entity.MeasurementUnit
-import com.diaszano.pratoo.data.local.entity.TagEntity
-import com.diaszano.pratoo.data.local.relation.RecipeListItem
-import com.diaszano.pratoo.data.local.relation.RecipeWithDetails
+import com.diaszano.pratoo.recipe.domain.model.Ingredient
+import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
+import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeListItem
+import com.diaszano.pratoo.recipe.domain.model.RecipeStep
+import com.diaszano.pratoo.recipe.domain.model.Tag
+import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 class FakeRecipeRepository : RecipeRepository {
 
-    private val recipes = mutableListOf<RecipeWithDetails>()
-    private val tags = mutableListOf<TagEntity>()
+    private val recipes = mutableListOf<Recipe>()
+    private val tags = mutableListOf<Tag>()
     private val crossRefs = mutableListOf<Pair<Long, Long>>()
-    private val recipesFlow = MutableStateFlow<List<RecipeWithDetails>>(emptyList())
-    private val tagsFlow = MutableStateFlow<List<TagEntity>>(emptyList())
+    private val recipesFlow = MutableStateFlow<List<Recipe>>(emptyList())
+    private val tagsFlow = MutableStateFlow<List<Tag>>(emptyList())
     private var nextId = 1L
 
     override fun observeAllRecipes(): Flow<List<RecipeListItem>> =
         recipesFlow.map { list ->
             list.map {
                 RecipeListItem(
-                    id = it.recipe.id,
-                    title = it.recipe.title,
-                    imageUri = it.recipe.imageUri,
-                    isFavorite = it.recipe.isFavorite,
-                    updatedAt = it.recipe.updatedAt
+                    id = it.id,
+                    title = it.title,
+                    imageUri = it.imageUri,
+                    isFavorite = it.isFavorite,
+                    updatedAt = it.updatedAt
                 )
             }
         }
@@ -33,14 +36,14 @@ class FakeRecipeRepository : RecipeRepository {
     override fun observeFavoriteRecipes(): Flow<List<RecipeListItem>> =
         recipesFlow.map { list ->
             list
-                .filter { it.recipe.isFavorite }
+                .filter { it.isFavorite }
                 .map {
                     RecipeListItem(
-                        id = it.recipe.id,
-                        title = it.recipe.title,
-                        imageUri = it.recipe.imageUri,
-                        isFavorite = it.recipe.isFavorite,
-                        updatedAt = it.recipe.updatedAt
+                        id = it.id,
+                        title = it.title,
+                        imageUri = it.imageUri,
+                        isFavorite = it.isFavorite,
+                        updatedAt = it.updatedAt
                     )
                 }
         }
@@ -50,43 +53,39 @@ class FakeRecipeRepository : RecipeRepository {
             list
                 .filter { recipe ->
                     val matchesQuery = query.isNullOrBlank() ||
-                        recipe.recipe.title.contains(query, ignoreCase = true) ||
+                        recipe.title.contains(query, ignoreCase = true) ||
                         recipe.ingredients.any { it.name.contains(query, ignoreCase = true) }
                     val matchesTag = tagId == null ||
-                        crossRefs.any { it.first == recipe.recipe.id && it.second == tagId }
+                        crossRefs.any { it.first == recipe.id && it.second == tagId }
                     matchesQuery && matchesTag
                 }
                 .map {
                     RecipeListItem(
-                        id = it.recipe.id,
-                        title = it.recipe.title,
-                        imageUri = it.recipe.imageUri,
-                        isFavorite = it.recipe.isFavorite,
-                        updatedAt = it.recipe.updatedAt
+                        id = it.id,
+                        title = it.title,
+                        imageUri = it.imageUri,
+                        isFavorite = it.isFavorite,
+                        updatedAt = it.updatedAt
                     )
                 }
         }
 
-    override fun observeRecipe(id: Long): Flow<RecipeWithDetails?> =
-        recipesFlow.map { list -> list.find { it.recipe.id == id } }
+    override fun observeRecipe(id: Long): Flow<Recipe?> =
+        recipesFlow.map { list -> list.find { it.id == id } }
 
-    override suspend fun getRecipe(id: Long): RecipeWithDetails? =
-        recipes.find { it.recipe.id == id }
+    override suspend fun getRecipe(id: Long): Recipe? =
+        recipes.find { it.id == id }
 
-    override suspend fun saveRecipe(
-        recipeWithDetails: RecipeWithDetails,
-        tags: List<TagEntity>
-    ): Long {
-        val recipe = recipeWithDetails.recipe
+    override suspend fun saveRecipe(recipe: Recipe): Long {
         val id = if (recipe.id == 0L) {
             nextId++
         } else {
-            recipes.removeAll { it.recipe.id == recipe.id }
+            recipes.removeAll { it.id == recipe.id }
             crossRefs.removeAll { it.first == recipe.id }
             recipe.id
         }
 
-        val resolvedTags = tags.map { tag ->
+        val resolvedTags = recipe.tags.map { tag ->
             val trimmed = tag.name.trim()
             if (trimmed.isBlank()) return@map null
             val existing = this.tags.find { it.name.equals(trimmed, ignoreCase = true) }
@@ -102,10 +101,10 @@ class FakeRecipeRepository : RecipeRepository {
             }
         }.filterNotNull()
 
-        val savedRecipe = RecipeWithDetails(
-            recipe = recipe.copy(id = id),
-            ingredients = recipeWithDetails.ingredients.map { it.copy(recipeId = id) },
-            steps = recipeWithDetails.steps.map { it.copy(recipeId = id) },
+        val savedRecipe = recipe.copy(
+            id = id,
+            ingredients = recipe.ingredients.map { it.copy(id = 0L) },
+            steps = recipe.steps.map { it.copy(id = 0L) },
             tags = resolvedTags
         )
         recipes.add(savedRecipe)
@@ -116,7 +115,7 @@ class FakeRecipeRepository : RecipeRepository {
     }
 
     override suspend fun deleteRecipe(id: Long) {
-        recipes.removeAll { it.recipe.id == id }
+        recipes.removeAll { it.id == id }
         crossRefs.removeAll { it.first == id }
         recipesFlow.value = recipes.toList()
     }
@@ -128,13 +127,20 @@ class FakeRecipeRepository : RecipeRepository {
     }
 
     override suspend fun toggleFavorite(id: Long) {
-        val index = recipes.indexOfFirst { it.recipe.id == id }
+        val index = recipes.indexOfFirst { it.id == id }
         if (index >= 0) {
             val recipe = recipes[index]
-            val updated = recipe.copy(recipe = recipe.recipe.copy(isFavorite = !recipe.recipe.isFavorite))
-            recipes[index] = updated
+            recipes[index] = recipe.copy(isFavorite = !recipe.isFavorite)
             recipesFlow.value = recipes.toList()
         }
+    }
+
+    override fun observeAllTags(): Flow<List<Tag>> = tagsFlow
+
+    override suspend fun getTagByName(name: String): Tag? {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return null
+        return tags.find { it.name.equals(trimmed, ignoreCase = true) }
     }
 
     override suspend fun createTag(name: String): Long {
@@ -143,17 +149,9 @@ class FakeRecipeRepository : RecipeRepository {
         val existing = tags.find { it.name.equals(trimmed, ignoreCase = true) }
         if (existing != null) return existing.id
         val id = nextId++
-        tags.add(TagEntity(id = id, name = trimmed))
+        tags.add(Tag(id = id, name = trimmed))
         tagsFlow.value = tags.toList()
         return id
-    }
-
-    override fun observeAllTags(): Flow<List<TagEntity>> = tagsFlow
-
-    override suspend fun getTagByName(name: String): TagEntity? {
-        val trimmed = name.trim()
-        if (trimmed.isBlank()) return null
-        return tags.find { it.name.equals(trimmed, ignoreCase = true) }
     }
 
     override suspend fun deleteTag(id: Long) {
@@ -161,7 +159,7 @@ class FakeRecipeRepository : RecipeRepository {
         tagsFlow.value = tags.toList()
     }
 
-    override suspend fun getAllRecipesWithDetails(): List<RecipeWithDetails> = recipes.toList()
+    override suspend fun getAllRecipes(): List<Recipe> = recipes.toList()
 
     override fun observeMeasurementUnits(): Flow<List<MeasurementUnit>> =
         MutableStateFlow(emptyList())

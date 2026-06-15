@@ -1,10 +1,9 @@
 package com.diaszano.pratoo.data.repository
 
-import com.diaszano.pratoo.data.local.entity.IngredientEntity
-import com.diaszano.pratoo.data.local.entity.RecipeEntity
-import com.diaszano.pratoo.data.local.entity.StepEntity
-import com.diaszano.pratoo.data.local.entity.TagEntity
-import com.diaszano.pratoo.data.local.relation.RecipeWithDetails
+import com.diaszano.pratoo.recipe.domain.model.Ingredient
+import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeStep
+import com.diaszano.pratoo.recipe.domain.model.Tag
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -27,43 +26,37 @@ class RecipeRepositoryTest {
         id: Long = 0,
         title: String = "Test Recipe",
         isFavorite: Boolean = false
-    ) = RecipeWithDetails(
-        recipe = RecipeEntity(
-            id = id,
-            title = title,
-            isFavorite = isFavorite
-        ),
-        ingredients = emptyList(),
-        steps = emptyList(),
-        tags = emptyList()
+    ) = Recipe(
+        id = id,
+        title = title,
+        isFavorite = isFavorite
     )
 
     @Test
     fun `save new recipe generates id`() = runTest {
         val recipe = createRecipe(title = "Bolo de Chocolate")
-        val id = repository.saveRecipe(recipe, emptyList())
+        val id = repository.saveRecipe(recipe)
 
         assertTrue(id > 0)
         val saved = repository.getRecipe(id)
         assertNotNull(saved)
-        assertEquals("Bolo de Chocolate", saved!!.recipe.title)
+        assertEquals("Bolo de Chocolate", saved!!.title)
     }
 
     @Test
     fun `save recipe with ingredients and steps`() = runTest {
-        val recipe = RecipeWithDetails(
-            recipe = RecipeEntity(title = "Recipe"),
+        val recipe = Recipe(
+            title = "Recipe",
             ingredients = listOf(
-                IngredientEntity(recipeId = 0, name = "Flour", quantity = "200g"),
-                IngredientEntity(recipeId = 0, name = "Sugar", quantity = "100g")
+                Ingredient(name = "Flour", quantity = "200g"),
+                Ingredient(name = "Sugar", quantity = "100g")
             ),
             steps = listOf(
-                StepEntity(recipeId = 0, text = "Mix ingredients"),
-                StepEntity(recipeId = 0, text = "Bake for 30 min")
-            ),
-            tags = emptyList()
+                RecipeStep(text = "Mix ingredients"),
+                RecipeStep(text = "Bake for 30 min")
+            )
         )
-        val id = repository.saveRecipe(recipe, emptyList())
+        val id = repository.saveRecipe(recipe)
 
         val saved = repository.getRecipe(id)
         assertNotNull(saved)
@@ -75,26 +68,26 @@ class RecipeRepositoryTest {
 
     @Test
     fun `edit existing recipe updates fields`() = runTest {
-        val id = repository.saveRecipe(createRecipe(title = "Original"), emptyList())
+        val id = repository.saveRecipe(createRecipe(title = "Original"))
 
         val updated = createRecipe(id = id, title = "Updated Recipe")
-        repository.saveRecipe(updated, emptyList())
+        repository.saveRecipe(updated)
 
         val saved = repository.getRecipe(id)
-        assertEquals("Updated Recipe", saved!!.recipe.title)
+        assertEquals("Updated Recipe", saved!!.title)
     }
 
     @Test
     fun `toggle favorite on recipe`() = runTest {
-        val id = repository.saveRecipe(createRecipe(isFavorite = false), emptyList())
+        val id = repository.saveRecipe(createRecipe(isFavorite = false))
 
         repository.toggleFavorite(id)
         var recipe = repository.getRecipe(id)
-        assertTrue(recipe!!.recipe.isFavorite)
+        assertTrue(recipe!!.isFavorite)
 
         repository.toggleFavorite(id)
         recipe = repository.getRecipe(id)
-        assertFalse(recipe!!.recipe.isFavorite)
+        assertFalse(recipe!!.isFavorite)
     }
 
     @Test
@@ -138,7 +131,7 @@ class RecipeRepositoryTest {
 
     @Test
     fun `delete recipe removes it`() = runTest {
-        val id = repository.saveRecipe(createRecipe(title = "To Delete"), emptyList())
+        val id = repository.saveRecipe(createRecipe(title = "To Delete"))
         assertNotNull(repository.getRecipe(id))
 
         repository.deleteRecipe(id)
@@ -147,9 +140,9 @@ class RecipeRepositoryTest {
 
     @Test
     fun `search by title filters recipes`() = runTest {
-        repository.saveRecipe(createRecipe(title = "Bolo de Chocolate"), emptyList())
-        repository.saveRecipe(createRecipe(title = "Salada Caesar"), emptyList())
-        repository.saveRecipe(createRecipe(title = "Bolo de Cenoura"), emptyList())
+        repository.saveRecipe(createRecipe(title = "Bolo de Chocolate"))
+        repository.saveRecipe(createRecipe(title = "Salada Caesar"))
+        repository.saveRecipe(createRecipe(title = "Bolo de Cenoura"))
 
         val results = repository.searchRecipes(query = "Bolo", tagId = null).first()
         assertEquals(2, results.size)
@@ -158,27 +151,28 @@ class RecipeRepositoryTest {
 
     @Test
     fun `observeAllRecipes returns all saved recipes`() = runTest {
-        repository.saveRecipe(createRecipe(title = "Recipe 1"), emptyList())
-        repository.saveRecipe(createRecipe(title = "Recipe 2"), emptyList())
+        repository.saveRecipe(createRecipe(title = "Recipe 1"))
+        repository.saveRecipe(createRecipe(title = "Recipe 2"))
 
         val all = repository.observeAllRecipes().first()
         assertEquals(2, all.size)
     }
 
     @Test
-    fun `getAllRecipesWithDetails returns all for backup`() = runTest {
-        repository.saveRecipe(createRecipe(title = "R1"), emptyList())
-        repository.saveRecipe(createRecipe(title = "R2"), emptyList())
+    fun `getAllRecipes returns all for backup`() = runTest {
+        repository.saveRecipe(createRecipe(title = "R1"))
+        repository.saveRecipe(createRecipe(title = "R2"))
 
-        val all = repository.getAllRecipesWithDetails()
+        val all = repository.getAllRecipes()
         assertEquals(2, all.size)
     }
 
     @Test
     fun `save recipe with tags creates cross refs`() = runTest {
-        val tag1 = TagEntity(name = "Sobremesa")
-        val tag2 = TagEntity(name = "Rápida")
-        val id = repository.saveRecipe(createRecipe(), listOf(tag1, tag2))
+        val tag1 = Tag(name = "Sobremesa")
+        val tag2 = Tag(name = "Rápida")
+        val recipe = createRecipe().copy(tags = listOf(tag1, tag2))
+        val id = repository.saveRecipe(recipe)
 
         val saved = repository.getRecipe(id)
         assertNotNull(saved)

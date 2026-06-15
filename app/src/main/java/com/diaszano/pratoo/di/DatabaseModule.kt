@@ -4,15 +4,17 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.diaszano.pratoo.data.local.PratooDatabase
-import com.diaszano.pratoo.data.local.dao.IngredientDao
-import com.diaszano.pratoo.data.local.dao.MeasurementUnitDao
-import com.diaszano.pratoo.data.local.dao.RecipeDao
-import com.diaszano.pratoo.data.local.dao.StepDao
-import com.diaszano.pratoo.data.local.dao.TagDao
-import com.diaszano.pratoo.data.local.entity.MeasurementUnit
-import com.diaszano.pratoo.data.repository.RecipeRepository
-import com.diaszano.pratoo.data.repository.RecipeRepositoryImpl
+import com.diaszano.pratoo.recipe.adapter.out.persistence.RoomRecipeRepository
+import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.IngredientDao
+import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.MeasurementUnitDao
+import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.RecipeDao
+import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.StepDao
+import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.TagDao
+import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.MeasurementUnitEntity
+import com.diaszano.pratoo.recipe.database.AppDatabase
+import com.diaszano.pratoo.recipe.domain.repository.RecipeBackupCodec
+import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
+import com.diaszano.pratoo.recipe.adapter.out.backup.JsonRecipeBackupCodec
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,9 +31,9 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): PratooDatabase =
-            Room.databaseBuilder(context, PratooDatabase::class.java, "pratoo.db")
-                    .addMigrations(PratooDatabase.MIGRATION_1_2, PratooDatabase.MIGRATION_2_3)
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
+            Room.databaseBuilder(context, AppDatabase::class.java, "pratoo.db")
+                    .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
                     .addCallback(
                             object : RoomDatabase.Callback() {
                                 override fun onCreate(db: SupportSQLiteDatabase) {
@@ -40,7 +42,7 @@ object DatabaseModule {
                                         val dao =
                                                 Room.databaseBuilder(
                                                                 context,
-                                                                PratooDatabase::class.java,
+                                                                AppDatabase::class.java,
                                                                 "pratoo.db"
                                                         )
                                                         .build()
@@ -57,7 +59,7 @@ object DatabaseModule {
                                         val database =
                                                 Room.databaseBuilder(
                                                                 context,
-                                                                PratooDatabase::class.java,
+                                                                AppDatabase::class.java,
                                                                 "pratoo.db"
                                                         )
                                                         .build()
@@ -74,203 +76,55 @@ object DatabaseModule {
 
     private fun defaultMeasurementUnits() =
             listOf(
-                    // Peso
-                    MeasurementUnit(
-                            abbreviation = "kg",
-                            displayName = "Quilograma",
-                            category = "weight"
-                    ),
-                    MeasurementUnit(abbreviation = "g", displayName = "Grama", category = "weight"),
-                    MeasurementUnit(
-                            abbreviation = "mg",
-                            displayName = "Miligrama",
-                            category = "weight"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "lb",
-                            displayName = "Libra",
-                            category = "weight"
-                    ),
-                    MeasurementUnit(abbreviation = "oz", displayName = "Onça", category = "weight"),
-
-                    // Volume
-                    MeasurementUnit(abbreviation = "L", displayName = "Litro", category = "volume"),
-                    MeasurementUnit(
-                            abbreviation = "ml",
-                            displayName = "Mililitro",
-                            category = "volume"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "fl oz",
-                            displayName = "Onça fluida",
-                            category = "volume"
-                    ),
-
-                    // Medidas culinárias
-                    MeasurementUnit(
-                            abbreviation = "xíc",
-                            displayName = "Xícara",
-                            category = "kitchen"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "1/2 xíc",
-                            displayName = "Meia xícara",
-                            category = "kitchen"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "cs",
-                            displayName = "Colher de sopa",
-                            category = "kitchen"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "ct",
-                            displayName = "Colher de chá",
-                            category = "kitchen"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "cc",
-                            displayName = "Colher de café",
-                            category = "kitchen"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "copo",
-                            displayName = "Copo",
-                            category = "kitchen"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "copo amer.",
-                            displayName = "Copo americano",
-                            category = "kitchen"
-                    ),
-
-                    // Quantidade / contagem
-                    MeasurementUnit(
-                            abbreviation = "un",
-                            displayName = "Unidade",
-                            category = "count"
-                    ),
-                    MeasurementUnit(abbreviation = "dz", displayName = "Dúzia", category = "count"),
-                    MeasurementUnit(abbreviation = "par", displayName = "Par", category = "count"),
-
-                    // Cortes e formatos
-                    MeasurementUnit(
-                            abbreviation = "fatia",
-                            displayName = "Fatia",
-                            category = "portion"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "pedaço",
-                            displayName = "Pedaço",
-                            category = "portion"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "porção",
-                            displayName = "Porção",
-                            category = "portion"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "rodela",
-                            displayName = "Rodela",
-                            category = "portion"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "cubo",
-                            displayName = "Cubo",
-                            category = "portion"
-                    ),
-
-                    // Ingredientes específicos comuns
-                    MeasurementUnit(
-                            abbreviation = "dente",
-                            displayName = "Dente",
-                            category = "ingredient_unit"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "folha",
-                            displayName = "Folha",
-                            category = "ingredient_unit"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "ramo",
-                            displayName = "Ramo",
-                            category = "ingredient_unit"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "maço",
-                            displayName = "Maço",
-                            category = "ingredient_unit"
-                    ),
-
-                    // Embalagens
-                    MeasurementUnit(
-                            abbreviation = "lata",
-                            displayName = "Lata",
-                            category = "package"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "garrafa",
-                            displayName = "Garrafa",
-                            category = "package"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "pacote",
-                            displayName = "Pacote",
-                            category = "package"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "sachê",
-                            displayName = "Sachê",
-                            category = "package"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "caixa",
-                            displayName = "Caixa",
-                            category = "package"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "vidro",
-                            displayName = "Vidro",
-                            category = "package"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "tablete",
-                            displayName = "Tablete",
-                            category = "package"
-                    ),
-
-                    // Medidas livres
-                    MeasurementUnit(
-                            abbreviation = "pitada",
-                            displayName = "Pitada",
-                            category = "other"
-                    ),
-                    MeasurementUnit(abbreviation = "fio", displayName = "Fio", category = "other"),
-                    MeasurementUnit(
-                            abbreviation = "q.b.",
-                            displayName = "Quanto baste",
-                            category = "other"
-                    ),
-                    MeasurementUnit(
-                            abbreviation = "a gosto",
-                            displayName = "A gosto",
-                            category = "other"
-                    )
+                    MeasurementUnitEntity(abbreviation = "kg", displayName = "Quilograma", category = "weight"),
+                    MeasurementUnitEntity(abbreviation = "g", displayName = "Grama", category = "weight"),
+                    MeasurementUnitEntity(abbreviation = "mg", displayName = "Miligrama", category = "weight"),
+                    MeasurementUnitEntity(abbreviation = "lb", displayName = "Libra", category = "weight"),
+                    MeasurementUnitEntity(abbreviation = "oz", displayName = "Onça", category = "weight"),
+                    MeasurementUnitEntity(abbreviation = "L", displayName = "Litro", category = "volume"),
+                    MeasurementUnitEntity(abbreviation = "ml", displayName = "Mililitro", category = "volume"),
+                    MeasurementUnitEntity(abbreviation = "fl oz", displayName = "Onça fluida", category = "volume"),
+                    MeasurementUnitEntity(abbreviation = "xíc", displayName = "Xícara", category = "kitchen"),
+                    MeasurementUnitEntity(abbreviation = "1/2 xíc", displayName = "Meia xícara", category = "kitchen"),
+                    MeasurementUnitEntity(abbreviation = "cs", displayName = "Colher de sopa", category = "kitchen"),
+                    MeasurementUnitEntity(abbreviation = "ct", displayName = "Colher de chá", category = "kitchen"),
+                    MeasurementUnitEntity(abbreviation = "cc", displayName = "Colher de café", category = "kitchen"),
+                    MeasurementUnitEntity(abbreviation = "copo", displayName = "Copo", category = "kitchen"),
+                    MeasurementUnitEntity(abbreviation = "copo amer.", displayName = "Copo americano", category = "kitchen"),
+                    MeasurementUnitEntity(abbreviation = "un", displayName = "Unidade", category = "count"),
+                    MeasurementUnitEntity(abbreviation = "dz", displayName = "Dúzia", category = "count"),
+                    MeasurementUnitEntity(abbreviation = "par", displayName = "Par", category = "count"),
+                    MeasurementUnitEntity(abbreviation = "fatia", displayName = "Fatia", category = "portion"),
+                    MeasurementUnitEntity(abbreviation = "pedaço", displayName = "Pedaço", category = "portion"),
+                    MeasurementUnitEntity(abbreviation = "porção", displayName = "Porção", category = "portion"),
+                    MeasurementUnitEntity(abbreviation = "rodela", displayName = "Rodela", category = "portion"),
+                    MeasurementUnitEntity(abbreviation = "cubo", displayName = "Cubo", category = "portion"),
+                    MeasurementUnitEntity(abbreviation = "dente", displayName = "Dente", category = "ingredient_unit"),
+                    MeasurementUnitEntity(abbreviation = "folha", displayName = "Folha", category = "ingredient_unit"),
+                    MeasurementUnitEntity(abbreviation = "ramo", displayName = "Ramo", category = "ingredient_unit"),
+                    MeasurementUnitEntity(abbreviation = "maço", displayName = "Maço", category = "ingredient_unit"),
+                    MeasurementUnitEntity(abbreviation = "lata", displayName = "Lata", category = "package"),
+                    MeasurementUnitEntity(abbreviation = "garrafa", displayName = "Garrafa", category = "package"),
+                    MeasurementUnitEntity(abbreviation = "pacote", displayName = "Pacote", category = "package"),
+                    MeasurementUnitEntity(abbreviation = "sachê", displayName = "Sachê", category = "package"),
+                    MeasurementUnitEntity(abbreviation = "caixa", displayName = "Caixa", category = "package"),
+                    MeasurementUnitEntity(abbreviation = "vidro", displayName = "Vidro", category = "package"),
+                    MeasurementUnitEntity(abbreviation = "tablete", displayName = "Tablete", category = "package"),
+                    MeasurementUnitEntity(abbreviation = "pitada", displayName = "Pitada", category = "other"),
+                    MeasurementUnitEntity(abbreviation = "fio", displayName = "Fio", category = "other"),
+                    MeasurementUnitEntity(abbreviation = "q.b.", displayName = "Quanto baste", category = "other"),
+                    MeasurementUnitEntity(abbreviation = "a gosto", displayName = "A gosto", category = "other")
             )
 
-    @Provides fun provideRecipeDao(database: PratooDatabase): RecipeDao = database.recipeDao()
+    @Provides fun provideRecipeDao(database: AppDatabase): RecipeDao = database.recipeDao()
+    @Provides fun provideIngredientDao(database: AppDatabase): IngredientDao = database.ingredientDao()
+    @Provides fun provideStepDao(database: AppDatabase): StepDao = database.stepDao()
+    @Provides fun provideTagDao(database: AppDatabase): TagDao = database.tagDao()
+    @Provides fun provideMeasurementUnitDao(database: AppDatabase): MeasurementUnitDao = database.measurementUnitDao()
 
-    @Provides
-    fun provideIngredientDao(database: PratooDatabase): IngredientDao = database.ingredientDao()
+    @Provides @Singleton
+    fun provideRecipeRepository(impl: RoomRecipeRepository): RecipeRepository = impl
 
-    @Provides fun provideStepDao(database: PratooDatabase): StepDao = database.stepDao()
-
-    @Provides fun provideTagDao(database: PratooDatabase): TagDao = database.tagDao()
-
-    @Provides
-    fun provideMeasurementUnitDao(database: PratooDatabase): MeasurementUnitDao =
-            database.measurementUnitDao()
-
-    @Provides
-    @Singleton
-    fun provideRecipeRepository(impl: RecipeRepositoryImpl): RecipeRepository = impl
+    @Provides @Singleton
+    fun provideBackupCodec(impl: JsonRecipeBackupCodec): RecipeBackupCodec = impl
 }

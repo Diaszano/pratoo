@@ -2,15 +2,17 @@ package com.diaszano.pratoo.ui.recipelist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.diaszano.pratoo.data.local.entity.TagEntity
-import com.diaszano.pratoo.data.local.relation.RecipeListItem
-import com.diaszano.pratoo.data.repository.RecipeRepository
+import com.diaszano.pratoo.recipe.application.usecase.DeleteRecipeUseCase
+import com.diaszano.pratoo.recipe.application.usecase.ObserveTagsUseCase
+import com.diaszano.pratoo.recipe.application.usecase.SearchRecipesUseCase
+import com.diaszano.pratoo.recipe.application.usecase.ToggleFavoriteUseCase
+import com.diaszano.pratoo.recipe.domain.model.RecipeListItem
+import com.diaszano.pratoo.recipe.domain.model.Tag
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
@@ -20,7 +22,7 @@ import javax.inject.Inject
 
 data class RecipeListUiState(
     val recipes: List<RecipeListItem> = emptyList(),
-    val allTags: List<TagEntity> = emptyList(),
+    val allTags: List<Tag> = emptyList(),
     val searchQuery: String = "",
     val selectedTagId: Long? = null,
     val isLoading: Boolean = false
@@ -28,7 +30,10 @@ data class RecipeListUiState(
 
 @HiltViewModel
 class RecipeListViewModel @Inject constructor(
-    private val repository: RecipeRepository
+    searchRecipes: SearchRecipesUseCase,
+    observeTags: ObserveTagsUseCase,
+    private val deleteRecipe: DeleteRecipeUseCase,
+    private val toggleFavorite: ToggleFavoriteUseCase
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -39,12 +44,12 @@ class RecipeListViewModel @Inject constructor(
         combine(_searchQuery, _selectedTagId) { query, tagId ->
             query to tagId
         }.debounce(300).flatMapLatest { (query, tagId) ->
-            repository.searchRecipes(
+            searchRecipes(
                 query = query.ifBlank { null },
                 tagId = tagId
             )
         },
-        repository.observeAllTags(),
+        observeTags(),
         _searchQuery,
         _selectedTagId
     ) { recipes, tags, query, tagId ->
@@ -72,13 +77,13 @@ class RecipeListViewModel @Inject constructor(
 
     fun onDeleteRecipe(recipeId: Long) {
         viewModelScope.launch {
-            repository.deleteRecipe(recipeId)
+            deleteRecipe(recipeId)
         }
     }
 
     fun onToggleFavorite(recipeId: Long) {
         viewModelScope.launch {
-            repository.toggleFavorite(recipeId)
+            toggleFavorite(recipeId)
         }
     }
 

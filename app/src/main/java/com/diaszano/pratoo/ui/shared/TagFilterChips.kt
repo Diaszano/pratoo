@@ -12,11 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.diaszano.pratoo.R
-import com.diaszano.pratoo.data.local.entity.TagEntity
+import com.diaszano.pratoo.recipe.domain.model.Tag
 
 @Composable
 fun TagFilterChips(
-    tags: List<TagEntity>,
+    tags: List<Tag>,
     selectedTagId: Long?,
     onTagSelected: (Long?) -> Unit,
     modifier: Modifier = Modifier,

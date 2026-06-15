@@ -371,7 +371,7 @@ fun RecipeEditScreen(
 private fun IngredientRow(
     index: Int,
     ingredient: IngredientFormItem,
-    units: List<com.diaszano.pratoo.data.local.entity.MeasurementUnit>,
+    units: List<com.diaszano.pratoo.recipe.domain.model.MeasurementUnit>,
     onNameChange: (String) -> Unit,
     onQuantityChange: (String) -> Unit,
     onUnitChange: (String) -> Unit,

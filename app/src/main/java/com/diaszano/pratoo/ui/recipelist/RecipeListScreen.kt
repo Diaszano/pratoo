@@ -57,7 +57,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.diaszano.pratoo.R
-import com.diaszano.pratoo.data.local.relation.RecipeListItem
+import com.diaszano.pratoo.recipe.domain.model.RecipeListItem
 import com.diaszano.pratoo.ui.shared.EmptyState
 import com.diaszano.pratoo.ui.shared.RecipeListSkeleton
 import com.diaszano.pratoo.ui.shared.RecipeSearchBar
