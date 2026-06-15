@@ -1,5 +1,6 @@
 package com.diaszano.pratoo.recipe.domain.model
 
+/** Represents a complete recipe with metadata, ingredients, steps, and tags. */
 data class Recipe(
     val id: Long = 0,
     val title: String,

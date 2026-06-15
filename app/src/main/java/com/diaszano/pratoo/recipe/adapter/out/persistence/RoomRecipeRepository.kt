@@ -119,5 +119,5 @@ class RoomRecipeRepository @Inject constructor(
         recipeDao.getAllWithDetails().map { it.toDomain() }
 
     override fun observeMeasurementUnits(): Flow<List<MeasurementUnit>> =
-        measurementUnitDao.observeAll().map { list -> list.map { it.toDomain() } }
+        measurementUnitDao.observeAllWithCategory().map { list -> list.map { it.toDomain() } }
 }

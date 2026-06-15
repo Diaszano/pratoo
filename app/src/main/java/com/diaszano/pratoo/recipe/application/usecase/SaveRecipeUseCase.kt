@@ -6,6 +6,7 @@ import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
 import com.diaszano.pratoo.recipe.domain.validation.RecipeValidator
 import javax.inject.Inject
 
+/** Validates, normalizes, and persists a recipe in a single transaction. */
 class SaveRecipeUseCase @Inject constructor(
     private val repository: RecipeRepository
 ) {

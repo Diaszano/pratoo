@@ -1,34 +1,60 @@
 package com.diaszano.pratoo.recipe.domain.validation
 
+import com.diaszano.pratoo.R
+import com.diaszano.pratoo.recipe.domain.model.Ingredient
 import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeStep
+import com.diaszano.pratoo.recipe.domain.model.Tag
 
-data class ValidationError(val field: String, val message: String)
+/**
+ * Domain-level validation errors for [Recipe] data.
+ *
+ * Each variant maps to a user-facing message via [toLocalizedMessageRes].
+ * Internal names are in English; the resolved message is in the device locale.
+ */
+sealed interface RecipeValidationError {
+
+    data object EmptyTitle : RecipeValidationError
+    data object InvalidServings : RecipeValidationError
+    data object NegativePrepTime : RecipeValidationError
+    data object NegativeCookTime : RecipeValidationError
+    data object EmptyIngredientName : RecipeValidationError
+
+    /** Returns the `@StringRes` identifier for the localized message. */
+    fun toLocalizedMessageRes(): Int = when (this) {
+        is EmptyTitle -> R.string.validation_empty_title
+        is InvalidServings -> R.string.validation_invalid_servings
+        is NegativePrepTime -> R.string.validation_negative_prep_time
+        is NegativeCookTime -> R.string.validation_negative_cook_time
+        is EmptyIngredientName -> R.string.validation_empty_ingredient_name
+    }
+}
 
 object RecipeValidator {
 
-    fun validate(recipe: Recipe): List<ValidationError> {
-        val errors = mutableListOf<ValidationError>()
+    fun validate(recipe: Recipe): List<RecipeValidationError> {
+        val errors = mutableListOf<RecipeValidationError>()
 
         if (recipe.title.isBlank()) {
-            errors.add(ValidationError("title", "Título é obrigatório"))
+            errors.add(RecipeValidationError.EmptyTitle)
         }
         if (recipe.servings < 1) {
-            errors.add(ValidationError("servings", "Porções devem ser pelo menos 1"))
+            errors.add(RecipeValidationError.InvalidServings)
         }
         if (recipe.prepTimeMinutes < 0) {
-            errors.add(ValidationError("prepTimeMinutes", "Tempo de preparo não pode ser negativo"))
+            errors.add(RecipeValidationError.NegativePrepTime)
         }
         if (recipe.cookTimeMinutes < 0) {
-            errors.add(ValidationError("cookTimeMinutes", "Tempo de cozinha não pode ser negativo"))
+            errors.add(RecipeValidationError.NegativeCookTime)
         }
         if (recipe.ingredients.any { it.name.isBlank() }) {
-            errors.add(ValidationError("ingredients", "Ingredientes com nome vazio não são permitidos"))
+            errors.add(RecipeValidationError.EmptyIngredientName)
         }
 
         return errors
     }
 
-    fun normalizeIngredients(ingredients: List<com.diaszano.pratoo.recipe.domain.model.Ingredient>) =
+    fun normalizeIngredients(ingredients: List<Ingredient>): List<Ingredient> =
         ingredients
             .filter { it.name.isNotBlank() }
             .mapIndexed { index, ingredient ->
@@ -41,7 +67,7 @@ object RecipeValidator {
                 )
             }
 
-    fun normalizeSteps(steps: List<com.diaszano.pratoo.recipe.domain.model.RecipeStep>) =
+    fun normalizeSteps(steps: List<RecipeStep>): List<RecipeStep> =
         steps
             .filter { it.text.isNotBlank() }
             .mapIndexed { index, step ->
@@ -52,7 +78,7 @@ object RecipeValidator {
                 )
             }
 
-    fun normalizeTags(tags: List<com.diaszano.pratoo.recipe.domain.model.Tag>) =
+    fun normalizeTags(tags: List<Tag>): List<Tag> =
         tags
             .map { it.copy(name = it.name.trim()) }
             .filter { it.name.isNotBlank() }

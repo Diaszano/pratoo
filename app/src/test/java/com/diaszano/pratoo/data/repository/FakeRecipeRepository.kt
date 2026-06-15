@@ -1,6 +1,7 @@
 package com.diaszano.pratoo.data.repository
 
 import com.diaszano.pratoo.recipe.domain.model.Ingredient
+import com.diaszano.pratoo.recipe.domain.model.MeasurementCategory
 import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
 import com.diaszano.pratoo.recipe.domain.model.Recipe
 import com.diaszano.pratoo.recipe.domain.model.RecipeListItem

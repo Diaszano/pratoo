@@ -54,6 +54,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.diaszano.pratoo.R
+import com.diaszano.pratoo.recipe.domain.model.Recipe
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -88,7 +89,7 @@ fun RecipeDetailScreen(
                 actions = {
                     uiState.recipe?.let { recipe ->
                         IconButton(onClick = {
-                            val text = formatRecipeAsText(recipe)
+                            val text = formatRecipeAsText(recipe, context)
                             val activity = context as? Activity
                             val sendIntent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
@@ -317,7 +318,7 @@ private fun formatIngredient(name: String, quantity: String, unit: String): Stri
     }
 }
 
-private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.Recipe): String {
+private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.Recipe, context: android.content.Context): String {
     return buildString {
         appendLine(recipe.title)
         appendLine()
@@ -327,9 +328,9 @@ private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.R
             recipe.cookTimeMinutes > 0
         if (hasMeta) {
             val meta = mutableListOf<String>()
-            if (recipe.servings > 0) meta.add("Porcoes: ${recipe.servings}")
-            if (recipe.prepTimeMinutes > 0) meta.add("Preparo: ${recipe.prepTimeMinutes}min")
-            if (recipe.cookTimeMinutes > 0) meta.add("Cozimento: ${recipe.cookTimeMinutes}min")
+            if (recipe.servings > 0) meta.add("${context.getString(R.string.share_servings)}: ${recipe.servings}")
+            if (recipe.prepTimeMinutes > 0) meta.add("${context.getString(R.string.share_prep_time)}: ${recipe.prepTimeMinutes}min")
+            if (recipe.cookTimeMinutes > 0) meta.add("${context.getString(R.string.share_cook_time)}: ${recipe.cookTimeMinutes}min")
             appendLine(meta.joinToString(" | "))
             appendLine()
         }
@@ -340,7 +341,7 @@ private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.R
         }
 
         if (recipe.ingredients.isNotEmpty()) {
-            appendLine("*Ingredientes*")
+            appendLine(context.getString(R.string.share_ingredients_header))
             recipe.ingredients.forEach { ing ->
                 appendLine("- ${formatIngredient(ing.name, ing.quantity, ing.unit)}")
             }
@@ -348,7 +349,7 @@ private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.R
         }
 
         if (recipe.steps.isNotEmpty()) {
-            appendLine("*Modo de preparo*")
+            appendLine(context.getString(R.string.share_steps_header))
             recipe.steps.sortedBy { it.order }.forEach { step ->
                 appendLine("${step.order + 1}. ${step.text}")
             }
@@ -356,7 +357,7 @@ private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.R
         }
 
         if (recipe.notes.isNotBlank()) {
-            appendLine("*Anotacoes*")
+            appendLine(context.getString(R.string.share_notes_header))
             appendLine(recipe.notes)
         }
     }.trimEnd()

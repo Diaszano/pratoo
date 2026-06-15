@@ -167,8 +167,8 @@ fun RecipeEditScreen(
                 value = uiState.title,
                 onValueChange = viewModel::onTitleChange,
                 label = { Text(stringResource(R.string.title_required)) },
-                isError = uiState.titleError != null,
-                supportingText = uiState.titleError?.let { { Text(it) } },
+                isError = uiState.titleErrorResId != null,
+                supportingText = uiState.titleErrorResId?.let { resId -> { Text(stringResource(resId)) } },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -434,16 +434,10 @@ private fun IngredientRow(
                     onDismissRequest = { unitExpanded = false }
                 ) {
                     groupedUnits.forEach { (category, categoryUnits) ->
-                        val categoryLabel = when (category) {
-                            "weight" -> "Peso"
-                            "volume" -> "Volume"
-                            "count" -> "Quantidade"
-                            else -> "Outros"
-                        }
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    categoryLabel,
+                                    category.displayName,
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -454,17 +448,10 @@ private fun IngredientRow(
                         categoryUnits.forEach { unit ->
                             DropdownMenuItem(
                                 text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            unit.abbreviation,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            modifier = Modifier.width(48.dp)
-                                        )
-                                        Text(
-                                            unit.displayName,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
+                                    Text(
+                                        unit.displayName,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
                                 },
                                 onClick = {
                                     onUnitChange(unit.abbreviation)

@@ -9,6 +9,7 @@ import androidx.navigation.toRoute
 import com.diaszano.pratoo.recipe.application.usecase.ObserveMeasurementUnitsUseCase
 import com.diaszano.pratoo.recipe.application.usecase.ObserveTagsUseCase
 import com.diaszano.pratoo.recipe.application.usecase.SaveRecipeUseCase
+import com.diaszano.pratoo.R
 import com.diaszano.pratoo.recipe.domain.model.Ingredient
 import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
 import com.diaszano.pratoo.recipe.domain.model.Recipe
@@ -58,7 +59,7 @@ data class RecipeEditUiState(
     val measurementUnits: List<MeasurementUnit> = emptyList(),
     val isSaving: Boolean = false,
     val isLoaded: Boolean = false,
-    val titleError: String? = null
+    @androidx.annotation.StringRes val titleErrorResId: Int? = null
 )
 
 @HiltViewModel
@@ -125,7 +126,7 @@ class RecipeEditViewModel @Inject constructor(
     }
 
     fun onTitleChange(title: String) {
-        _uiState.update { it.copy(title = title, titleError = null) }
+        _uiState.update { it.copy(title = title, titleErrorResId = null) }
     }
 
     fun onNotesChange(notes: String) {
@@ -294,7 +295,7 @@ class RecipeEditViewModel @Inject constructor(
     fun onSave(onSuccess: () -> Unit) {
         val state = currentState
         if (state.title.isBlank()) {
-            _uiState.update { it.copy(titleError = "Título é obrigatório") }
+            _uiState.update { it.copy(titleErrorResId = R.string.validation_empty_title) }
             return
         }
 

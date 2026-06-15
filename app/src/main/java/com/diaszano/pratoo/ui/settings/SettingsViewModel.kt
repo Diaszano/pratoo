@@ -1,15 +1,19 @@
 package com.diaszano.pratoo.ui.settings
 
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.diaszano.pratoo.R
 import com.diaszano.pratoo.data.settings.AppPreferences
 import com.diaszano.pratoo.data.settings.ThemeMode
 import com.diaszano.pratoo.recipe.adapter.out.backup.AndroidBackupFileReader
 import com.diaszano.pratoo.recipe.application.usecase.ExportRecipesBackupUseCase
 import com.diaszano.pratoo.recipe.application.usecase.ImportRecipesBackupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +38,8 @@ class SettingsViewModel @Inject constructor(
     private val exportBackup: ExportRecipesBackupUseCase,
     private val importBackup: ImportRecipesBackupUseCase,
     private val backupFileReader: AndroidBackupFileReader,
-    private val appPreferences: AppPreferences
+    private val appPreferences: AppPreferences,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -77,7 +82,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun exportToUri(uri: Uri, context: android.content.Context) {
+    fun exportToUri(uri: Uri, context: Context) {
         viewModelScope.launch {
             _uiState.value = SettingsUiState(isExporting = true)
             try {
@@ -87,23 +92,24 @@ class SettingsViewModel @Inject constructor(
                         it.write(json.toByteArray())
                     }
                 }
-                _uiState.value = SettingsUiState(message = "Backup exportado com sucesso!")
+                _uiState.value = SettingsUiState(message = context.getString(R.string.export_success))
             } catch (e: Exception) {
-                _uiState.value = SettingsUiState(message = "Erro ao exportar: ${e.message}")
+                _uiState.value = SettingsUiState(message = context.getString(R.string.export_error_detail, e.message ?: ""))
             }
         }
     }
 
-    fun importFromUri(uri: Uri, context: android.content.Context) {
+    fun importFromUri(uri: Uri, context: Context) {
         viewModelScope.launch {
             _uiState.value = SettingsUiState(isImporting = true)
             try {
                 val content = withContext(Dispatchers.IO) { backupFileReader.read(uri) }
                 importBackup(content)
-                _uiState.value = SettingsUiState(message = "Receitas importadas com sucesso!")
-                Toast.makeText(context, "Receitas importadas com sucesso!", Toast.LENGTH_SHORT).show()
+                val successMsg = context.getString(R.string.import_success)
+                _uiState.value = SettingsUiState(message = successMsg)
+                Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                _uiState.value = SettingsUiState(message = "Erro ao importar: ${e.message}")
+                _uiState.value = SettingsUiState(message = context.getString(R.string.import_error_detail, e.message ?: ""))
             }
         }
     }

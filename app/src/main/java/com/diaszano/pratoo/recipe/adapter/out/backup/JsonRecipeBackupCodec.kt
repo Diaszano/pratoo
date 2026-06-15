@@ -11,10 +11,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
+/** Encodes and decodes recipe backups as versioned JSON using kotlinx.serialization. */
 class JsonRecipeBackupCodec @Inject constructor() : RecipeBackupCodec {
 
     companion object {
         const val BACKUP_VERSION = 1
+
+        /** Fallback title for imported recipes with blank titles. Intentionally in Portuguese. */
+        private const val DEFAULT_TITLE = "Receita sem título"
     }
 
     private val json = Json {
@@ -61,7 +65,7 @@ class JsonRecipeBackupCodec @Inject constructor() : RecipeBackupCodec {
 
         return data.recipes.map { dto ->
             Recipe(
-                title = dto.title.trim().ifBlank { "Receita sem título" },
+                title = dto.title.trim().ifBlank { DEFAULT_TITLE },
                 notes = dto.notes.trim(),
                 imageUri = dto.imageUri,
                 servings = dto.servings.coerceAtLeast(1),
