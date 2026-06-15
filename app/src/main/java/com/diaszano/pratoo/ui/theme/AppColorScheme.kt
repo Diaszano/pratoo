@@ -84,37 +84,82 @@ private val PratooDarkColorScheme = darkColorScheme(
     inversePrimary = PratooDarkInversePrimary,
 )
 
-// ── Moonlight Color Scheme (dark-only, blue-toned) ──────────────────
+// ── Moonlight Purple Color Schemes ─────────────────────────────────
 
-private val MoonlightColorScheme = darkColorScheme(
-    primary = MoonlightBlue,
-    onPrimary = MoonlightGray1,
-    primaryContainer = MoonlightGray5,
-    onPrimaryContainer = MoonlightGray10,
-    secondary = MoonlightPurple,
-    onSecondary = MoonlightGray1,
-    secondaryContainer = MoonlightGray5,
-    onSecondaryContainer = MoonlightGray9,
-    tertiary = MoonlightTeal,
-    onTertiary = MoonlightGray1,
-    tertiaryContainer = MoonlightGray5,
-    onTertiaryContainer = MoonlightGreen,
-    error = MoonlightDarkRed,
-    onError = MoonlightGray1,
-    background = MoonlightGray4,
-    onBackground = MoonlightGray10,
-    surface = MoonlightGray3,
-    onSurface = MoonlightGray10,
-    surfaceVariant = MoonlightGray5,
-    onSurfaceVariant = MoonlightGray8,
-    outline = MoonlightGray6,
-    outlineVariant = MoonlightGray5,
-    inverseSurface = MoonlightGray10,
-    inverseOnSurface = MoonlightGray1,
-    inversePrimary = Color(0xFF3D6FE0),
+private val MoonPurpleDarkColorScheme = darkColorScheme(
+    primary = MoonPurpleDarkPrimary,
+    onPrimary = MoonPurpleDarkOnPrimary,
+    primaryContainer = MoonPurpleDarkPrimaryContainer,
+    onPrimaryContainer = MoonPurpleDarkOnPrimaryContainer,
+
+    secondary = MoonPurpleDarkSecondary,
+    onSecondary = MoonPurpleDarkOnSecondary,
+    secondaryContainer = MoonPurpleDarkSecondaryContainer,
+    onSecondaryContainer = MoonPurpleDarkOnSecondaryContainer,
+
+    tertiary = MoonPurpleDarkTertiary,
+    onTertiary = MoonPurpleDarkOnTertiary,
+    tertiaryContainer = MoonPurpleDarkTertiaryContainer,
+    onTertiaryContainer = MoonPurpleDarkOnTertiaryContainer,
+
+    background = MoonPurpleDarkBackground,
+    onBackground = MoonPurpleDarkOnBackground,
+
+    surface = MoonPurpleDarkSurface,
+    onSurface = MoonPurpleDarkOnSurface,
+
+    surfaceVariant = MoonPurpleDarkSurfaceVariant,
+    onSurfaceVariant = MoonPurpleDarkOnSurfaceVariant,
+
+    outline = MoonPurpleDarkOutline,
+    outlineVariant = MoonPurpleDarkOutlineVariant,
+
+    error = MoonPurpleDarkError,
+    onError = MoonPurpleDarkOnError,
+
+    inverseSurface = MoonPurpleDarkOnBackground,
+    inverseOnSurface = MoonPurpleDarkBackground,
+    inversePrimary = MoonPurpleLightPrimary,
+)
+
+private val MoonPurpleLightColorScheme = lightColorScheme(
+    primary = MoonPurpleLightPrimary,
+    onPrimary = MoonPurpleLightOnPrimary,
+    primaryContainer = MoonPurpleLightPrimaryContainer,
+    onPrimaryContainer = MoonPurpleLightOnPrimaryContainer,
+
+    secondary = MoonPurpleLightSecondary,
+    onSecondary = MoonPurpleLightOnSecondary,
+    secondaryContainer = MoonPurpleLightSecondaryContainer,
+    onSecondaryContainer = MoonPurpleLightOnSecondaryContainer,
+
+    tertiary = MoonPurpleLightTertiary,
+    onTertiary = MoonPurpleLightOnTertiary,
+    tertiaryContainer = MoonPurpleLightTertiaryContainer,
+    onTertiaryContainer = MoonPurpleLightOnTertiaryContainer,
+
+    background = MoonPurpleLightBackground,
+    onBackground = MoonPurpleLightOnBackground,
+
+    surface = MoonPurpleLightSurface,
+    onSurface = MoonPurpleLightOnSurface,
+
+    surfaceVariant = MoonPurpleLightSurfaceVariant,
+    onSurfaceVariant = MoonPurpleLightOnSurfaceVariant,
+
+    outline = MoonPurpleLightOutline,
+    outlineVariant = MoonPurpleLightOutlineVariant,
+
+    error = MoonPurpleLightError,
+    onError = MoonPurpleLightOnError,
+
+    inverseSurface = MoonPurpleLightOnBackground,
+    inverseOnSurface = MoonPurpleLightBackground,
+    inversePrimary = MoonPurpleDarkPrimary,
 )
 
 // ── Theme-to-ColorScheme factory ─────────────────────────────────────
+
 /**
  * Returns the [ColorScheme] for the given [AppTheme] and darkness flag.
  *
@@ -125,11 +170,12 @@ private val MoonlightColorScheme = darkColorScheme(
 fun getColorScheme(appTheme: AppTheme, darkTheme: Boolean): ColorScheme {
     return when (appTheme) {
         AppTheme.Pratoo -> if (darkTheme) PratooDarkColorScheme else PratooLightColorScheme
-        AppTheme.Moonlight -> MoonlightColorScheme
+        AppTheme.Moonlight -> if (darkTheme) MoonPurpleDarkColorScheme else MoonPurpleLightColorScheme
     }
 }
 
 // ── Theme-to-AppColors factory ───────────────────────────────────────
+
 /**
  * Returns app-level semantic colors for the given [AppTheme].
  *

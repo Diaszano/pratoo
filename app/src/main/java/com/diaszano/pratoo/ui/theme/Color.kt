@@ -70,32 +70,90 @@ val PratooDarkInversePrimary = Color(0xFFD96C2C)
 val PratooFavorite = Color(0xFFFFB300)
 val PratooSuccess = Color(0xFF4CAF50)
 
-// ── Moonlight Gray Scale ────────────────────────────────────────────
-val MoonlightGray1 = Color(0xFF131421)
-val MoonlightGray2 = Color(0xFF191A2A)
-val MoonlightGray3 = Color(0xFF1E2030)
-val MoonlightGray4 = Color(0xFF222436)
-val MoonlightGray5 = Color(0xFF2F334D)
-val MoonlightGray6 = Color(0xFF444A73)
-val MoonlightGray7 = Color(0xFF828BB8)
-val MoonlightGray8 = Color(0xFFA9B8E8)
-val MoonlightGray9 = Color(0xFFB4C2F0)
-val MoonlightGray10 = Color(0xFFC8D3F5)
+// ── Moonlight Purple Dark Palette ──────────────────────────────────
 
-// ── Moonlight Accent Colors ─────────────────────────────────────────
-val MoonlightBlue = Color(0xFF7CAFFF)
-val MoonlightSky = Color(0xFF60BDFF)
-val MoonlightPurple = Color(0xFFC4A2FF)
-val MoonlightIndigo = Color(0xFFAF9FFF)
-val MoonlightTeal = Color(0xFF3AD7C7)
-val MoonlightCyan = Color(0xFF78DBFF)
-val MoonlightGreen = Color(0xFFC3E88D)
-val MoonlightYellow = Color(0xFFFFC777)
-val MoonlightOrange = Color(0xFFFF966C)
-val MoonlightRed = Color(0xFFFF757F)
-val MoonlightDarkRed = Color(0xFFFF5370)
-val MoonlightPink = Color(0xFFFCA7EA)
+val MoonPurpleDarkBackground = Color(0xFF211F32)
+val MoonPurpleDarkSurface = Color(0xFF1B1929)
+val MoonPurpleDarkSurfaceLow = Color(0xFF171525)
+val MoonPurpleDarkSurfaceVariant = Color(0xFF302B46)
+val MoonPurpleDarkSurfaceHighest = Color(0xFF3D3758)
+
+val MoonPurpleDarkOnBackground = Color(0xFFE7DEFF)
+val MoonPurpleDarkOnSurface = Color(0xFFE7DEFF)
+val MoonPurpleDarkOnSurfaceVariant = Color(0xFFCFC3F5)
+val MoonPurpleDarkTextMuted = Color(0xFF9F93C6)
+
+val MoonPurpleDarkPrimary = Color(0xFFC4A2FF)
+val MoonPurpleDarkOnPrimary = Color(0xFF2E145F)
+val MoonPurpleDarkPrimaryContainer = Color(0xFF4A2C7A)
+val MoonPurpleDarkOnPrimaryContainer = Color(0xFFEADDFF)
+
+val MoonPurpleDarkSecondary = Color(0xFFAF9FFF)
+val MoonPurpleDarkOnSecondary = Color(0xFF241457)
+val MoonPurpleDarkSecondaryContainer = Color(0xFF3E326B)
+val MoonPurpleDarkOnSecondaryContainer = Color(0xFFE5DEFF)
+
+val MoonPurpleDarkTertiary = Color(0xFFFCA7EA)
+val MoonPurpleDarkOnTertiary = Color(0xFF4F143F)
+val MoonPurpleDarkTertiaryContainer = Color(0xFF71345F)
+val MoonPurpleDarkOnTertiaryContainer = Color(0xFFFFD7F3)
+
+val MoonPurpleDarkError = Color(0xFFFF5370)
+val MoonPurpleDarkOnError = Color(0xFF3A0712)
+
+val MoonPurpleDarkOutline = Color(0xFF6F6394)
+val MoonPurpleDarkOutlineVariant = Color(0xFF48405F)
+
+// ── Moonlight Purple Support Accents (dark) ────────────────────────
+
+val MoonPurpleBlueAccent = Color(0xFF7CAFFF)
+val MoonPurpleTealAccent = Color(0xFF3AD7C7)
+val MoonPurpleGreenAccent = Color(0xFFC3E88D)
+val MoonPurpleYellowAccent = Color(0xFFFFC777)
+val MoonPurpleOrangeAccent = Color(0xFFFF966C)
+
+// ── Moonlight Purple Light Palette ─────────────────────────────────
+
+val MoonPurpleLightBackground = Color(0xFFFCF8FF)
+val MoonPurpleLightSurface = Color(0xFFFFFFFF)
+val MoonPurpleLightSurfaceLow = Color(0xFFF6EEFF)
+val MoonPurpleLightSurfaceVariant = Color(0xFFE9DFF8)
+
+val MoonPurpleLightOnBackground = Color(0xFF21172F)
+val MoonPurpleLightOnSurface = Color(0xFF21172F)
+val MoonPurpleLightOnSurfaceVariant = Color(0xFF5F526F)
+val MoonPurpleLightTextMuted = Color(0xFF7A6D8D)
+
+val MoonPurpleLightPrimary = Color(0xFF7353B8)
+val MoonPurpleLightOnPrimary = Color(0xFFFFFFFF)
+val MoonPurpleLightPrimaryContainer = Color(0xFFEBDDFF)
+val MoonPurpleLightOnPrimaryContainer = Color(0xFF270A58)
+
+val MoonPurpleLightSecondary = Color(0xFF62558F)
+val MoonPurpleLightOnSecondary = Color(0xFFFFFFFF)
+val MoonPurpleLightSecondaryContainer = Color(0xFFE7DEFF)
+val MoonPurpleLightOnSecondaryContainer = Color(0xFF1E1644)
+
+val MoonPurpleLightTertiary = Color(0xFF965081)
+val MoonPurpleLightOnTertiary = Color(0xFFFFFFFF)
+val MoonPurpleLightTertiaryContainer = Color(0xFFFFD7F0)
+val MoonPurpleLightOnTertiaryContainer = Color(0xFF3B0B31)
+
+val MoonPurpleLightError = Color(0xFFBA1A1A)
+val MoonPurpleLightOnError = Color(0xFFFFFFFF)
+
+val MoonPurpleLightOutline = Color(0xFF7C708C)
+val MoonPurpleLightOutlineVariant = Color(0xFFCCC1DA)
+
+// ── Moonlight Purple Support Accents (light) ───────────────────────
+
+val MoonPurpleLightBlueAccent = Color(0xFF3D6FE0)
+val MoonPurpleLightTealAccent = Color(0xFF008C84)
+val MoonPurpleLightGreenAccent = Color(0xFF5F8A4C)
+val MoonPurpleLightYellowAccent = Color(0xFFB87900)
+val MoonPurpleLightOrangeAccent = Color(0xFFC95F23)
 
 // ── Moonlight Semantic Colors ───────────────────────────────────────
-val MoonlightFavorite = MoonlightYellow
-val MoonlightSuccess = MoonlightGreen
+
+val MoonlightFavorite = MoonPurpleYellowAccent
+val MoonlightSuccess = MoonPurpleGreenAccent
