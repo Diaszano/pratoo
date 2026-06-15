@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -20,11 +20,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun EmptyState(
+fun ErrorState(
     message: String,
     modifier: Modifier = Modifier,
-    title: String? = null,
-    icon: ImageVector = Icons.Default.SearchOff,
+    icon: ImageVector = Icons.Default.ErrorOutline,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
 ) {
@@ -36,19 +35,10 @@ fun EmptyState(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(72.dp),
         )
         Spacer(Modifier.height(16.dp))
-        if (title != null) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(8.dp))
-        }
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,

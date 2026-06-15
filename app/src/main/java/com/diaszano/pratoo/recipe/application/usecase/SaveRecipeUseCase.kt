@@ -19,13 +19,18 @@ class SaveRecipeUseCase
             val normalized =
                 recipe.copy(
                     sections =
-                        recipe.sections.mapIndexed { sectionIndex, section ->
-                            section.copy(
-                                position = sectionIndex,
-                                ingredients = RecipeValidator.normalizeIngredients(section.ingredients),
-                                steps = RecipeValidator.normalizeSteps(section.steps),
-                            )
-                        },
+                        recipe.sections
+                            .map { section ->
+                                section.copy(
+                                    name = section.name.trim(),
+                                    ingredients = RecipeValidator.normalizeIngredients(section.ingredients),
+                                    steps = RecipeValidator.normalizeSteps(section.steps),
+                                )
+                            }.filter { section ->
+                                section.ingredients.isNotEmpty() || section.steps.isNotEmpty()
+                            }.mapIndexed { sectionIndex, section ->
+                                section.copy(position = sectionIndex)
+                            },
                     tags = RecipeValidator.normalizeTags(recipe.tags),
                 )
             return repository.saveRecipe(normalized)

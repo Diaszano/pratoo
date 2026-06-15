@@ -59,6 +59,7 @@ object DatabaseModule {
             CoroutineScope(Dispatchers.IO).launch {
                 seedCategories(db)
                 seedUnits(db)
+                updateCategoryDisplayNames(db)
             }
         }
 
@@ -78,6 +79,7 @@ object DatabaseModule {
                     seedCategories(db)
                     seedUnits(db)
                 }
+                updateCategoryDisplayNames(db)
             }
         }
 
@@ -86,7 +88,7 @@ object DatabaseModule {
             categories.forEach { category ->
                 db.execSQL(
                     "INSERT OR IGNORE INTO measurement_categories (code, display_name, sort_order) VALUES (?, ?, ?)",
-                    arrayOf(category.code, category.displayName, category.sortOrder),
+                    arrayOf<Any>(category.code, category.displayName, category.sortOrder),
                 )
             }
         }
@@ -104,18 +106,27 @@ object DatabaseModule {
                 )
             }
         }
+
+        private fun updateCategoryDisplayNames(db: SupportSQLiteDatabase) {
+            defaultCategories().forEach { category ->
+                db.execSQL(
+                    "UPDATE measurement_categories SET display_name = ? WHERE code = ?",
+                    arrayOf(category.displayName, category.code),
+                )
+            }
+        }
     }
 
     internal fun defaultCategories(): List<MeasurementCategoryEntity> =
         listOf(
-            MeasurementCategoryEntity(code = "weight", displayName = "Weight", sortOrder = 10),
+            MeasurementCategoryEntity(code = "weight", displayName = "Peso", sortOrder = 10),
             MeasurementCategoryEntity(code = "volume", displayName = "Volume", sortOrder = 20),
-            MeasurementCategoryEntity(code = "kitchen", displayName = "Kitchen measurements", sortOrder = 30),
-            MeasurementCategoryEntity(code = "count", displayName = "Quantity", sortOrder = 40),
-            MeasurementCategoryEntity(code = "portion", displayName = "Portions and cuts", sortOrder = 50),
-            MeasurementCategoryEntity(code = "ingredient_unit", displayName = "Ingredient units", sortOrder = 60),
-            MeasurementCategoryEntity(code = "package", displayName = "Packages", sortOrder = 70),
-            MeasurementCategoryEntity(code = "other", displayName = "Other", sortOrder = 80),
+            MeasurementCategoryEntity(code = "kitchen", displayName = "Medidas culinárias", sortOrder = 30),
+            MeasurementCategoryEntity(code = "count", displayName = "Quantidade", sortOrder = 40),
+            MeasurementCategoryEntity(code = "portion", displayName = "Porções e cortes", sortOrder = 50),
+            MeasurementCategoryEntity(code = "ingredient_unit", displayName = "Unidades de ingrediente", sortOrder = 60),
+            MeasurementCategoryEntity(code = "package", displayName = "Embalagens", sortOrder = 70),
+            MeasurementCategoryEntity(code = "other", displayName = "Outros", sortOrder = 80),
         )
 
     /**
