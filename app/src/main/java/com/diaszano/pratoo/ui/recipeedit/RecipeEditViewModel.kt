@@ -1,5 +1,6 @@
 package com.diaszano.pratoo.ui.recipeedit
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -14,6 +15,8 @@ import com.diaszano.pratoo.data.local.relation.RecipeWithDetails
 import com.diaszano.pratoo.data.repository.RecipeRepository
 import com.diaszano.pratoo.ui.navigation.RecipeEditRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,6 +24,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 
 data class IngredientFormItem(
@@ -56,7 +62,8 @@ data class RecipeEditUiState(
 @HiltViewModel
 class RecipeEditViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: RecipeRepository
+    private val repository: RecipeRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val route: RecipeEditRoute = savedStateHandle.toRoute<RecipeEditRoute>()
@@ -133,7 +140,34 @@ class RecipeEditViewModel @Inject constructor(
     }
 
     fun onImageSelected(uri: Uri) {
-        _uiState.update { it.copy(imageUri = uri.toString()) }
+        viewModelScope.launch {
+            val savedPath = copyImageToInternalStorage(uri)
+            if (savedPath != null) {
+                _uiState.update { it.copy(imageUri = savedPath) }
+            }
+        }
+    }
+
+    private suspend fun copyImageToInternalStorage(uri: Uri): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val imagesDir = File(context.filesDir, "recipe_images")
+                if (!imagesDir.exists()) imagesDir.mkdirs()
+
+                val fileName = "recipe_${UUID.randomUUID()}.jpg"
+                val destFile = File(imagesDir, fileName)
+
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    destFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                destFile.absolutePath
+            } catch (_: Exception) {
+                null
+            }
+        }
     }
 
     fun onSourceUrlChange(url: String) {
