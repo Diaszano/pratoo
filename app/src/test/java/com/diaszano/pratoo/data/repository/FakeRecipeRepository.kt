@@ -5,6 +5,7 @@ import com.diaszano.pratoo.recipe.domain.model.MeasurementCategory
 import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
 import com.diaszano.pratoo.recipe.domain.model.Recipe
 import com.diaszano.pratoo.recipe.domain.model.RecipeListItem
+import com.diaszano.pratoo.recipe.domain.model.RecipeSection
 import com.diaszano.pratoo.recipe.domain.model.RecipeStep
 import com.diaszano.pratoo.recipe.domain.model.Tag
 import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
@@ -55,7 +56,10 @@ class FakeRecipeRepository : RecipeRepository {
                 .filter { recipe ->
                     val matchesQuery = query.isNullOrBlank() ||
                         recipe.title.contains(query, ignoreCase = true) ||
-                        recipe.ingredients.any { it.name.contains(query, ignoreCase = true) }
+                        recipe.sections.any { section ->
+                            section.name.contains(query, ignoreCase = true) ||
+                            section.ingredients.any { it.name.contains(query, ignoreCase = true) }
+                        }
                     val matchesTag = tagId == null ||
                         crossRefs.any { it.first == recipe.id && it.second == tagId }
                     matchesQuery && matchesTag
@@ -104,8 +108,12 @@ class FakeRecipeRepository : RecipeRepository {
 
         val savedRecipe = recipe.copy(
             id = id,
-            ingredients = recipe.ingredients.map { it.copy(id = 0L) },
-            steps = recipe.steps.map { it.copy(id = 0L) },
+            sections = recipe.sections.map { section ->
+                section.copy(
+                    ingredients = section.ingredients.map { it.copy(id = 0L) },
+                    steps = section.steps.map { it.copy(id = 0L) }
+                )
+            },
             tags = resolvedTags
         )
         recipes.add(savedRecipe)

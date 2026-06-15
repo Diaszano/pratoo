@@ -206,86 +206,117 @@ fun RecipeEditScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-            Text(stringResource(R.string.ingredients_label), style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
-
-            uiState.ingredients.forEachIndexed { index, ingredient ->
-                IngredientRow(
-                    index = index,
-                    ingredient = ingredient,
-                    units = uiState.measurementUnits,
-                    onNameChange = { viewModel.onIngredientChange(index, it, ingredient.quantity, ingredient.unit) },
-                    onQuantityChange = { viewModel.onIngredientChange(index, ingredient.name, it, ingredient.unit) },
-                    onUnitChange = { viewModel.onIngredientChange(index, ingredient.name, ingredient.quantity, it) },
-                    onRemove = { viewModel.onRemoveIngredient(index) }
-                )
-                Spacer(Modifier.height(4.dp))
-            }
-            OutlinedButton(
-                onClick = viewModel::onAddIngredient,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.add_ingredient))
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-            Text(stringResource(R.string.steps_label), style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
-
-            uiState.steps.forEachIndexed { index, step ->
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                    Text(
-                        "${index + 1}.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(top = 16.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = step.text,
-                        onValueChange = { viewModel.onStepChange(index, it) },
-                        label = { Text("${stringResource(R.string.step_label)} ${index + 1}") },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(80.dp)
-                    )
-                    Column {
-                        IconButton(
-                            onClick = { viewModel.onMoveStepUp(index) },
-                            enabled = index > 0
-                        ) {
-                            Icon(
-                                Icons.Default.ArrowUpward,
-                                contentDescription = stringResource(R.string.move_up),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        IconButton(
-                            onClick = { viewModel.onMoveStepDown(index) },
-                            enabled = index < uiState.steps.lastIndex
-                        ) {
-                            Icon(
-                                Icons.Default.ArrowDownward,
-                                contentDescription = stringResource(R.string.move_down),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        IconButton(onClick = { viewModel.onRemoveStep(index) }) {
-                            Icon(Icons.Default.Close, stringResource(R.string.remove))
+            uiState.sections.forEachIndexed { sectionIndex, section ->
+                if (uiState.sections.size > 1 || section.name.isNotBlank() || sectionIndex > 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = section.name,
+                            onValueChange = { viewModel.onSectionNameChange(sectionIndex, it) },
+                            label = { Text(stringResource(R.string.recipe_section_name)) },
+                            placeholder = { Text(stringResource(R.string.recipe_section_name_hint)) },
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (uiState.sections.size > 1) {
+                            Spacer(Modifier.width(8.dp))
+                            IconButton(onClick = { viewModel.onRemoveSection(sectionIndex) }) {
+                                Icon(Icons.Default.Close, stringResource(R.string.remove_recipe_section))
+                            }
                         }
                     }
+                    Spacer(Modifier.height(4.dp))
                 }
-                Spacer(Modifier.height(4.dp))
+
+                Text(stringResource(R.string.section_ingredients), style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+
+                section.ingredients.forEachIndexed { ingredientIndex, ingredient ->
+                    IngredientRow(
+                        sectionIndex = sectionIndex,
+                        ingredientIndex = ingredientIndex,
+                        ingredient = ingredient,
+                        units = uiState.measurementUnits,
+                        onNameChange = { viewModel.onIngredientChange(sectionIndex, ingredientIndex, it, ingredient.quantity, ingredient.unit) },
+                        onQuantityChange = { viewModel.onIngredientChange(sectionIndex, ingredientIndex, ingredient.name, it, ingredient.unit) },
+                        onUnitChange = { viewModel.onIngredientChange(sectionIndex, ingredientIndex, ingredient.name, ingredient.quantity, it) },
+                        onRemove = { viewModel.onRemoveIngredient(sectionIndex, ingredientIndex) }
+                    )
+                    Spacer(Modifier.height(4.dp))
+                }
+                OutlinedButton(
+                    onClick = { viewModel.onAddIngredient(sectionIndex) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.add_ingredient))
+                }
+
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(R.string.section_steps), style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+
+                section.steps.forEachIndexed { stepIndex, step ->
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                        Text(
+                            "${stepIndex + 1}.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        OutlinedTextField(
+                            value = step.text,
+                            onValueChange = { viewModel.onStepChange(sectionIndex, stepIndex, it) },
+                            label = { Text("${stringResource(R.string.step_label)} ${stepIndex + 1}") },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(80.dp)
+                        )
+                        Column {
+                            IconButton(
+                                onClick = { viewModel.onMoveStepUp(sectionIndex, stepIndex) },
+                                enabled = stepIndex > 0
+                            ) {
+                                Icon(Icons.Default.ArrowUpward, stringResource(R.string.move_up), modifier = Modifier.size(18.dp))
+                            }
+                            IconButton(
+                                onClick = { viewModel.onMoveStepDown(sectionIndex, stepIndex) },
+                                enabled = stepIndex < section.steps.lastIndex
+                            ) {
+                                Icon(Icons.Default.ArrowDownward, stringResource(R.string.move_down), modifier = Modifier.size(18.dp))
+                            }
+                            IconButton(onClick = { viewModel.onRemoveStep(sectionIndex, stepIndex) }) {
+                                Icon(Icons.Default.Close, stringResource(R.string.remove))
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
+                OutlinedButton(
+                    onClick = { viewModel.onAddStep(sectionIndex) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.add_step))
+                }
+
+                if (sectionIndex < uiState.sections.lastIndex) {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                }
             }
+
+            Spacer(Modifier.height(8.dp))
             OutlinedButton(
-                onClick = viewModel::onAddStep,
+                onClick = viewModel::onAddSection,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(stringResource(R.string.add_step))
+                Text(stringResource(R.string.add_recipe_section))
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
@@ -370,7 +401,8 @@ fun RecipeEditScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun IngredientRow(
-    index: Int,
+    sectionIndex: Int,
+    ingredientIndex: Int,
     ingredient: IngredientFormItem,
     units: List<com.diaszano.pratoo.recipe.domain.model.MeasurementUnit>,
     onNameChange: (String) -> Unit,

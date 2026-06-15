@@ -9,6 +9,7 @@ import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.IngredientDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.MeasurementCategoryDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.MeasurementUnitDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.RecipeDao
+import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.RecipeSectionDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.StepDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.TagDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.MeasurementCategoryEntity
@@ -140,6 +141,7 @@ object DatabaseModule {
     )
 
     @Provides fun provideRecipeDao(database: AppDatabase): RecipeDao = database.recipeDao()
+    @Provides fun provideRecipeSectionDao(database: AppDatabase): RecipeSectionDao = database.recipeSectionDao()
     @Provides fun provideIngredientDao(database: AppDatabase): IngredientDao = database.ingredientDao()
     @Provides fun provideStepDao(database: AppDatabase): StepDao = database.stepDao()
     @Provides fun provideTagDao(database: AppDatabase): TagDao = database.tagDao()

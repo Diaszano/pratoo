@@ -6,13 +6,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.diaszano.pratoo.R
 import com.diaszano.pratoo.recipe.application.usecase.ObserveMeasurementUnitsUseCase
 import com.diaszano.pratoo.recipe.application.usecase.ObserveTagsUseCase
 import com.diaszano.pratoo.recipe.application.usecase.SaveRecipeUseCase
-import com.diaszano.pratoo.R
 import com.diaszano.pratoo.recipe.domain.model.Ingredient
 import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
 import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeSection
 import com.diaszano.pratoo.recipe.domain.model.RecipeStep
 import com.diaszano.pratoo.recipe.domain.model.Tag
 import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
@@ -42,6 +43,12 @@ data class StepFormItem(
     val text: String = ""
 )
 
+data class SectionFormItem(
+    val name: String = "",
+    val ingredients: List<IngredientFormItem> = listOf(IngredientFormItem()),
+    val steps: List<StepFormItem> = listOf(StepFormItem())
+)
+
 data class RecipeEditUiState(
     val title: String = "",
     val notes: String = "",
@@ -51,8 +58,7 @@ data class RecipeEditUiState(
     val cookTimeMinutes: String = "",
     val sourceUrl: String = "",
     val isFavorite: Boolean = false,
-    val ingredients: List<IngredientFormItem> = listOf(IngredientFormItem()),
-    val steps: List<StepFormItem> = listOf(StepFormItem()),
+    val sections: List<SectionFormItem> = listOf(SectionFormItem()),
     val allTags: List<Tag> = emptyList(),
     val selectedTagIds: Set<Long> = emptySet(),
     val newTagName: String = "",
@@ -105,16 +111,17 @@ class RecipeEditViewModel @Inject constructor(
                         cookTimeMinutes = if (recipe.cookTimeMinutes > 0) recipe.cookTimeMinutes.toString() else "",
                         sourceUrl = recipe.sourceUrl ?: "",
                         isFavorite = recipe.isFavorite,
-                        ingredients = if (recipe.ingredients.isEmpty()) {
-                            listOf(IngredientFormItem())
-                        } else {
-                            recipe.ingredients.map { IngredientFormItem(it.name, it.quantity, it.unit) }
-                        },
-                        steps = if (recipe.steps.isEmpty()) {
-                            listOf(StepFormItem())
-                        } else {
-                            recipe.steps.sortedBy { it.order }.map { StepFormItem(it.text) }
-                        },
+                        sections = recipe.sections.map { section ->
+                            SectionFormItem(
+                                name = section.name,
+                                ingredients = section.ingredients.map {
+                                    IngredientFormItem(it.name, it.quantity, it.unit)
+                                }.ifEmpty { listOf(IngredientFormItem()) },
+                                steps = section.steps.sortedBy { it.order }.map {
+                                    StepFormItem(it.text)
+                                }.ifEmpty { listOf(StepFormItem()) }
+                            )
+                        }.ifEmpty { listOf(SectionFormItem()) },
                         selectedTagIds = recipe.tags.map { it.id }.toSet(),
                         isLoaded = true
                     )
@@ -184,77 +191,149 @@ class RecipeEditViewModel @Inject constructor(
         _uiState.update { it.copy(isFavorite = !it.isFavorite) }
     }
 
-    // Ingredients
-    fun onAddIngredient() {
-        _uiState.update { it.copy(ingredients = it.ingredients + IngredientFormItem()) }
+    // ── Sections ──────────────────────────────────────────────────
+
+    fun onAddSection() {
+        _uiState.update { it.copy(sections = it.sections + SectionFormItem()) }
     }
 
-    fun onIngredientChange(index: Int, name: String, quantity: String, unit: String) {
+    fun onRemoveSection(sectionIndex: Int) {
         _uiState.update {
-            val updated = it.ingredients.toMutableList()
-            if (index in updated.indices) {
-                updated[index] = IngredientFormItem(name, quantity, unit)
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) updated.removeAt(sectionIndex)
+            if (updated.isEmpty()) updated.add(SectionFormItem())
+            it.copy(sections = updated)
+        }
+    }
+
+    fun onSectionNameChange(sectionIndex: Int, name: String) {
+        _uiState.update {
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                updated[sectionIndex] = updated[sectionIndex].copy(name = name)
             }
-            it.copy(ingredients = updated)
+            it.copy(sections = updated)
         }
     }
 
-    fun onRemoveIngredient(index: Int) {
-        _uiState.update {
-            val updated = it.ingredients.toMutableList()
-            if (index in updated.indices) updated.removeAt(index)
-            if (updated.isEmpty()) updated.add(IngredientFormItem())
-            it.copy(ingredients = updated)
-        }
-    }
+    // ── Ingredients per section ───────────────────────────────────
 
-    // Steps
-    fun onAddStep() {
-        _uiState.update { it.copy(steps = it.steps + StepFormItem()) }
-    }
-
-    fun onStepChange(index: Int, text: String) {
+    fun onAddIngredient(sectionIndex: Int) {
         _uiState.update {
-            val updated = it.steps.toMutableList()
-            if (index in updated.indices) {
-                updated[index] = StepFormItem(text)
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                val section = updated[sectionIndex]
+                updated[sectionIndex] = section.copy(ingredients = section.ingredients + IngredientFormItem())
             }
-            it.copy(steps = updated)
+            it.copy(sections = updated)
         }
     }
 
-    fun onRemoveStep(index: Int) {
+    fun onIngredientChange(sectionIndex: Int, ingredientIndex: Int, name: String, quantity: String, unit: String) {
         _uiState.update {
-            val updated = it.steps.toMutableList()
-            if (index in updated.indices) updated.removeAt(index)
-            if (updated.isEmpty()) updated.add(StepFormItem())
-            it.copy(steps = updated)
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                val section = updated[sectionIndex]
+                val ingredients = section.ingredients.toMutableList()
+                if (ingredientIndex in ingredients.indices) {
+                    ingredients[ingredientIndex] = IngredientFormItem(name, quantity, unit)
+                }
+                updated[sectionIndex] = section.copy(ingredients = ingredients)
+            }
+            it.copy(sections = updated)
         }
     }
 
-    fun onMoveStepUp(index: Int) {
-        if (index <= 0) return
+    fun onRemoveIngredient(sectionIndex: Int, ingredientIndex: Int) {
         _uiState.update {
-            val updated = it.steps.toMutableList()
-            val temp = updated[index]
-            updated[index] = updated[index - 1]
-            updated[index - 1] = temp
-            it.copy(steps = updated)
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                val section = updated[sectionIndex]
+                val ingredients = section.ingredients.toMutableList()
+                if (ingredientIndex in ingredients.indices) ingredients.removeAt(ingredientIndex)
+                if (ingredients.isEmpty()) ingredients.add(IngredientFormItem())
+                updated[sectionIndex] = section.copy(ingredients = ingredients)
+            }
+            it.copy(sections = updated)
         }
     }
 
-    fun onMoveStepDown(index: Int) {
+    // ── Steps per section ─────────────────────────────────────────
+
+    fun onAddStep(sectionIndex: Int) {
         _uiState.update {
-            val updated = it.steps.toMutableList()
-            if (index >= updated.lastIndex) return@update it.copy(steps = updated)
-            val temp = updated[index]
-            updated[index] = updated[index + 1]
-            updated[index + 1] = temp
-            it.copy(steps = updated)
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                val section = updated[sectionIndex]
+                updated[sectionIndex] = section.copy(steps = section.steps + StepFormItem())
+            }
+            it.copy(sections = updated)
         }
     }
 
-    // Tags
+    fun onStepChange(sectionIndex: Int, stepIndex: Int, text: String) {
+        _uiState.update {
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                val section = updated[sectionIndex]
+                val steps = section.steps.toMutableList()
+                if (stepIndex in steps.indices) {
+                    steps[stepIndex] = StepFormItem(text)
+                }
+                updated[sectionIndex] = section.copy(steps = steps)
+            }
+            it.copy(sections = updated)
+        }
+    }
+
+    fun onRemoveStep(sectionIndex: Int, stepIndex: Int) {
+        _uiState.update {
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                val section = updated[sectionIndex]
+                val steps = section.steps.toMutableList()
+                if (stepIndex in steps.indices) steps.removeAt(stepIndex)
+                if (steps.isEmpty()) steps.add(StepFormItem())
+                updated[sectionIndex] = section.copy(steps = steps)
+            }
+            it.copy(sections = updated)
+        }
+    }
+
+    fun onMoveStepUp(sectionIndex: Int, stepIndex: Int) {
+        if (stepIndex <= 0) return
+        _uiState.update {
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                val section = updated[sectionIndex]
+                val steps = section.steps.toMutableList()
+                val temp = steps[stepIndex]
+                steps[stepIndex] = steps[stepIndex - 1]
+                steps[stepIndex - 1] = temp
+                updated[sectionIndex] = section.copy(steps = steps)
+            }
+            it.copy(sections = updated)
+        }
+    }
+
+    fun onMoveStepDown(sectionIndex: Int, stepIndex: Int) {
+        _uiState.update {
+            val updated = it.sections.toMutableList()
+            if (sectionIndex in updated.indices) {
+                val section = updated[sectionIndex]
+                val steps = section.steps.toMutableList()
+                if (stepIndex >= steps.lastIndex) return@update it.copy(sections = updated)
+                val temp = steps[stepIndex]
+                steps[stepIndex] = steps[stepIndex + 1]
+                steps[stepIndex + 1] = temp
+                updated[sectionIndex] = section.copy(steps = steps)
+            }
+            it.copy(sections = updated)
+        }
+    }
+
+    // ── Tags ──────────────────────────────────────────────────────
+
     fun onToggleTag(tagId: Long) {
         _uiState.update {
             val updated = it.selectedTagIds.toMutableSet()
@@ -291,7 +370,8 @@ class RecipeEditViewModel @Inject constructor(
         }
     }
 
-    // Save
+    // ── Save ──────────────────────────────────────────────────────
+
     fun onSave(onSuccess: () -> Unit) {
         val state = currentState
         if (state.title.isBlank()) {
@@ -311,16 +391,23 @@ class RecipeEditViewModel @Inject constructor(
             cookTimeMinutes = state.cookTimeMinutes.toIntOrNull() ?: 0,
             sourceUrl = state.sourceUrl.ifBlank { null },
             isFavorite = state.isFavorite,
-            ingredients = state.ingredients
-                .filter { it.name.isNotBlank() }
-                .mapIndexed { index, ing ->
-                    Ingredient(name = ing.name, quantity = ing.quantity, unit = ing.unit, position = index)
-                },
-            steps = state.steps
-                .filter { it.text.isNotBlank() }
-                .mapIndexed { index, step ->
-                    RecipeStep(text = step.text, order = index)
-                },
+            sections = state.sections.mapIndexed { sectionIndex, section ->
+                RecipeSection(
+                    name = section.name.trim(),
+                    position = sectionIndex,
+                    ingredients = section.ingredients
+                        .filter { it.name.isNotBlank() }
+                        .mapIndexed { idx, ing ->
+                            Ingredient(name = ing.name, quantity = ing.quantity, unit = ing.unit, position = idx)
+                        },
+                    steps = section.steps
+                        .filter { it.text.isNotBlank() }
+                        .mapIndexed { idx, step ->
+                            RecipeStep(text = step.text, order = idx)
+                        }
+                )
+            }.filter { it.ingredients.isNotEmpty() || it.steps.isNotEmpty() }
+                .ifEmpty { listOf(RecipeSection()) },
             tags = state.selectedTagIds.map { Tag(id = it, name = "") }
         )
 

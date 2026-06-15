@@ -228,41 +228,58 @@ fun RecipeDetailScreen(
                     )
                 }
 
-                // Ingredients
-                if (recipe.ingredients.isNotEmpty()) {
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        stringResource(R.string.ingredients_label),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    recipe.ingredients.forEach { ingredient ->
+                // Sections
+                recipe.sections.forEach { section ->
+                    val hasContent = section.ingredients.isNotEmpty() || section.steps.isNotEmpty()
+                    if (!hasContent) return@forEach
+
+                    val showSectionHeader = recipe.sections.size > 1 || section.name.isNotBlank()
+
+                    if (showSectionHeader) {
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(Modifier.height(16.dp))
                         Text(
-                            "• ${formatIngredient(ingredient.name, ingredient.quantity, ingredient.unit)}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(vertical = 2.dp)
+                            section.name.ifBlank { stringResource(R.string.default_recipe_section) },
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
-                }
 
-                // Steps
-                if (recipe.steps.isNotEmpty()) {
-                    Spacer(Modifier.height(16.dp))
-                    HorizontalDivider()
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        stringResource(R.string.steps_label),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    recipe.steps.sortedBy { it.order }.forEach { step ->
+                    if (section.ingredients.isNotEmpty()) {
+                        Spacer(Modifier.height(if (showSectionHeader) 4.dp else 16.dp))
                         Text(
-                            "${step.order + 1}. ${step.text}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            stringResource(R.string.ingredients_label),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
                         )
+                        Spacer(Modifier.height(8.dp))
+                        section.ingredients.forEach { ingredient ->
+                            Text(
+                                "• ${formatIngredient(ingredient.name, ingredient.quantity, ingredient.unit)}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    if (section.steps.isNotEmpty()) {
+                        Spacer(Modifier.height(16.dp))
+                        if (section.ingredients.isEmpty()) HorizontalDivider()
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            stringResource(R.string.steps_label),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        section.steps.sortedBy { it.order }.forEach { step ->
+                            Text(
+                                "${step.order + 1}. ${step.text}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
                     }
                 }
 
@@ -340,20 +357,25 @@ private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.R
             appendLine()
         }
 
-        if (recipe.ingredients.isNotEmpty()) {
-            appendLine(context.getString(R.string.share_ingredients_header))
-            recipe.ingredients.forEach { ing ->
-                appendLine("- ${formatIngredient(ing.name, ing.quantity, ing.unit)}")
-            }
-            appendLine()
-        }
+        if (recipe.sections.isNotEmpty()) {
+            val allIngredients = recipe.sections.flatMap { it.ingredients }
+            val allSteps = recipe.sections.flatMap { it.steps }
 
-        if (recipe.steps.isNotEmpty()) {
-            appendLine(context.getString(R.string.share_steps_header))
-            recipe.steps.sortedBy { it.order }.forEach { step ->
-                appendLine("${step.order + 1}. ${step.text}")
+            if (allIngredients.isNotEmpty()) {
+                appendLine(context.getString(R.string.share_ingredients_header))
+                allIngredients.forEach { ing ->
+                    appendLine("- ${formatIngredient(ing.name, ing.quantity, ing.unit)}")
+                }
+                appendLine()
             }
-            appendLine()
+
+            if (allSteps.isNotEmpty()) {
+                appendLine(context.getString(R.string.share_steps_header))
+                allSteps.sortedBy { it.order }.forEach { step ->
+                    appendLine("${step.order + 1}. ${step.text}")
+                }
+                appendLine()
+            }
         }
 
         if (recipe.notes.isNotBlank()) {

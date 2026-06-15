@@ -47,7 +47,10 @@ object RecipeValidator {
         if (recipe.cookTimeMinutes < 0) {
             errors.add(RecipeValidationError.NegativeCookTime)
         }
-        if (recipe.ingredients.any { it.name.isBlank() }) {
+        val hasBlankIngredient = recipe.sections.any { section ->
+            section.ingredients.any { it.name.isBlank() }
+        }
+        if (hasBlankIngredient) {
             errors.add(RecipeValidationError.EmptyIngredientName)
         }
 

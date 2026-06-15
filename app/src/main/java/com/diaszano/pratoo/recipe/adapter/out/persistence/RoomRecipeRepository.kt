@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.IngredientDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.MeasurementUnitDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.RecipeDao
+import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.RecipeSectionDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.StepDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.TagDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.RecipeTagCrossRef
@@ -14,6 +15,7 @@ import com.diaszano.pratoo.recipe.database.AppDatabase
 import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
 import com.diaszano.pratoo.recipe.domain.model.Recipe
 import com.diaszano.pratoo.recipe.domain.model.RecipeListItem
+import com.diaszano.pratoo.recipe.domain.model.RecipeSection
 import com.diaszano.pratoo.recipe.domain.model.Tag
 import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +27,7 @@ import javax.inject.Singleton
 class RoomRecipeRepository @Inject constructor(
     private val database: AppDatabase,
     private val recipeDao: RecipeDao,
+    private val recipeSectionDao: RecipeSectionDao,
     private val ingredientDao: IngredientDao,
     private val stepDao: StepDao,
     private val tagDao: TagDao,
@@ -51,36 +54,37 @@ class RoomRecipeRepository @Inject constructor(
             recipeDao.insert(recipe.toEntity())
         } else {
             recipeDao.update(recipe.toEntity())
-            ingredientDao.deleteByRecipeId(recipe.id)
-            stepDao.deleteByRecipeId(recipe.id)
             tagDao.deleteCrossRefsByRecipeId(recipe.id)
             recipe.id
         }
 
-        val ingredients = recipe.ingredients
-            .filter { it.name.isNotBlank() }
-            .mapIndexed { index, ingredient ->
-                ingredient.copy(id = 0L, position = index)
-            }
-        ingredientDao.insertAll(ingredients.map { it.toEntity(recipeId) })
+        recipeSectionDao.deleteByRecipeId(recipeId)
 
-        val steps = recipe.steps
-            .filter { it.text.isNotBlank() }
-            .mapIndexed { index, step ->
-                step.copy(id = 0L, order = index)
-            }
-        stepDao.insertAll(steps.map { it.toEntity(recipeId) })
+        recipe.sections
+            .ifEmpty { listOf(RecipeSection()) }
+            .mapIndexed { sectionIndex, section ->
+                val sectionId = recipeSectionDao.insert(
+                    section.toEntity(recipeId = recipeId).copy(position = sectionIndex)
+                )
 
-        recipe.tags
-            .map { it.copy(name = it.name.trim()) }
-            .filter { it.name.isNotBlank() }
-            .distinctBy { it.name.lowercase() }
-            .forEach { tag ->
-                val existingTag = tagDao.getByName(tag.name)
-                val tagId = existingTag?.id ?: tagDao.insert(TagEntity(name = tag.name))
-                tagDao.insertCrossRef(RecipeTagCrossRef(recipeId, tagId))
+                ingredientDao.insertAll(
+                    section.ingredients
+                        .filter { it.name.isNotBlank() }
+                        .mapIndexed { idx, ing ->
+                            ing.copy(id = 0L, position = idx).toEntity(sectionId = sectionId)
+                        }
+                )
+
+                stepDao.insertAll(
+                    section.steps
+                        .filter { it.text.isNotBlank() }
+                        .mapIndexed { idx, step ->
+                            step.copy(id = 0L, order = idx).toEntity(sectionId = sectionId)
+                        }
+                )
             }
 
+        saveTags(recipeId, recipe.tags)
         recipeId
     }
 
@@ -120,4 +124,16 @@ class RoomRecipeRepository @Inject constructor(
 
     override fun observeMeasurementUnits(): Flow<List<MeasurementUnit>> =
         measurementUnitDao.observeAllWithCategory().map { list -> list.map { it.toDomain() } }
+
+    private suspend fun saveTags(recipeId: Long, tags: List<Tag>) {
+        tags
+            .map { it.copy(name = it.name.trim()) }
+            .filter { it.name.isNotBlank() }
+            .distinctBy { it.name.lowercase() }
+            .forEach { tag ->
+                val existingTag = tagDao.getByName(tag.name)
+                val tagId = existingTag?.id ?: tagDao.insert(TagEntity(name = tag.name))
+                tagDao.insertCrossRef(RecipeTagCrossRef(recipeId, tagId))
+            }
+    }
 }

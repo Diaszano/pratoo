@@ -85,4 +85,32 @@
     <string name="share_ingredients_header">*Ingredientes*</string>
     <string name="share_steps_header">*Modo de preparo*</string>
     <string name="share_notes_header">*Anotações*</string>
+
+    <!-- Recipe sections -->
+    <string name="recipe_sections">Partes da receita</string>
+    <string name="add_recipe_section">Adicionar parte</string>
+    <string name="remove_recipe_section">Remover parte</string>
+    <string name="recipe_section_name">Nome da parte</string>
+    <string name="recipe_section_name_hint">Ex: Massa, recheio, cobertura</string>
+    <string name="section_ingredients">Ingredientes desta parte</string>
+    <string name="section_steps">Modo de preparo desta parte</string>
+    <string name="default_recipe_section">Principal</string>
+
+    <!-- Cooking mode -->
+    <string name="start_cooking">Fazer receita</string>
+    <string name="finish_cooking">Finalizar receita</string>
+    <string name="exit_cooking_mode">Sair do modo preparo</string>
+    <string name="cooking_ingredients">Ingredientes</string>
+    <string name="cooking_steps">Modo de preparo</string>
+    <string name="completed_ingredients_count">Ingredientes: %1$d de %2$d</string>
+    <string name="completed_steps_count">Passos: %1$d de %2$d</string>
+    <string name="cooking_progress">Concluído: %1$d%%</string>
+    <string name="keep_screen_on_notice">A tela ficará ligada até finalizar a receita.</string>
+    <string name="confirm_exit_cooking_title">Sair do modo preparo?</string>
+    <string name="confirm_exit_cooking_message">Seu progresso será perdido ao sair.</string>
+    <string name="confirm_exit_cooking_confirm">Sair</string>
+    <string name="confirm_exit_cooking_cancel">Continuar</string>
+    <string name="recipe_finished_message">Receita finalizada!</string>
+    <string name="no_ingredients_in_section">Nenhum ingrediente nesta parte.</string>
+    <string name="no_steps_in_section">Nenhum passo nesta parte.</string>
 </resources>

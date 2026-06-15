@@ -24,9 +24,10 @@ interface RecipeDao {
         """
         SELECT DISTINCT r.id, r.title, r.image_uri AS imageUri, r.is_favorite AS isFavorite, r.updated_at AS updatedAt 
         FROM recipes r
-        LEFT JOIN ingredients i ON i.recipe_id = r.id
+        LEFT JOIN recipe_sections rs ON rs.recipe_id = r.id
+        LEFT JOIN ingredients i ON i.section_id = rs.id
         LEFT JOIN recipe_tag_cross_ref rt ON rt.recipe_id = r.id
-        WHERE (:query IS NULL OR r.title LIKE '%' || :query || '%' OR i.name LIKE '%' || :query || '%')
+        WHERE (:query IS NULL OR r.title LIKE '%' || :query || '%' OR rs.name LIKE '%' || :query || '%' OR i.name LIKE '%' || :query || '%')
         AND (:tagId IS NULL OR rt.tag_id = :tagId)
         ORDER BY r.updated_at DESC
         """

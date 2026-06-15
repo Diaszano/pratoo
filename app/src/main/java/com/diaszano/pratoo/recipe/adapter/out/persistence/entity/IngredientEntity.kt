@@ -10,19 +10,23 @@ import androidx.room.PrimaryKey
     tableName = "ingredients",
     foreignKeys = [
         ForeignKey(
-            entity = RecipeEntity::class,
+            entity = RecipeSectionEntity::class,
             parentColumns = ["id"],
-            childColumns = ["recipe_id"],
+            childColumns = ["section_id"],
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("recipe_id")]
+    indices = [
+        Index(value = ["section_id"]),
+        Index(value = ["section_id", "position"]),
+        Index(value = ["name"])
+    ]
 )
 data class IngredientEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    @ColumnInfo(name = "recipe_id")
-    val recipeId: Long,
+    @ColumnInfo(name = "section_id")
+    val sectionId: Long,
     val name: String,
     val quantity: String = "",
     val unit: String = "",

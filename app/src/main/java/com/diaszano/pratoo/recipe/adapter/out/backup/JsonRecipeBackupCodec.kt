@@ -2,6 +2,7 @@ package com.diaszano.pratoo.recipe.adapter.out.backup
 
 import com.diaszano.pratoo.recipe.domain.model.Ingredient
 import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeSection
 import com.diaszano.pratoo.recipe.domain.model.RecipeStep
 import com.diaszano.pratoo.recipe.domain.model.Tag
 import com.diaszano.pratoo.recipe.domain.repository.RecipeBackupCodec
@@ -11,11 +12,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-/** Encodes and decodes recipe backups as versioned JSON using kotlinx.serialization. */
 class JsonRecipeBackupCodec @Inject constructor() : RecipeBackupCodec {
 
     companion object {
-        const val BACKUP_VERSION = 1
+        const val BACKUP_VERSION = 2
 
         /** Fallback title for imported recipes with blank titles. Intentionally in Portuguese. */
         private const val DEFAULT_TITLE = "Receita sem título"
@@ -41,11 +41,17 @@ class JsonRecipeBackupCodec @Inject constructor() : RecipeBackupCodec {
                     isFavorite = recipe.isFavorite,
                     createdAt = recipe.createdAt,
                     updatedAt = recipe.updatedAt,
-                    ingredients = recipe.ingredients.map {
-                        BackupIngredientDto(it.name, it.quantity, it.unit, it.position)
-                    },
-                    steps = recipe.steps.map {
-                        BackupStepDto(it.text, it.order)
+                    sections = recipe.sections.map { section ->
+                        BackupRecipeSectionDto(
+                            name = section.name,
+                            position = section.position,
+                            ingredients = section.ingredients.map {
+                                BackupIngredientDto(it.name, it.quantity, it.unit, it.position)
+                            },
+                            steps = section.steps.map {
+                                BackupStepDto(it.text, it.order)
+                            }
+                        )
                     },
                     tags = recipe.tags.map { BackupTagDto(it.name) }
                 )
@@ -64,6 +70,51 @@ class JsonRecipeBackupCodec @Inject constructor() : RecipeBackupCodec {
         }
 
         return data.recipes.map { dto ->
+            val sections = if (dto.sections.isNotEmpty()) {
+                dto.sections.map { sectionDto ->
+                    RecipeSection(
+                        name = sectionDto.name.trim(),
+                        position = sectionDto.position,
+                        ingredients = sectionDto.ingredients
+                            .filter { it.name.isNotBlank() }
+                            .mapIndexed { index, ing ->
+                                Ingredient(
+                                    name = ing.name.trim(),
+                                    quantity = ing.quantity.trim(),
+                                    unit = ing.unit.trim(),
+                                    position = index
+                                )
+                            },
+                        steps = sectionDto.steps
+                            .filter { it.text.isNotBlank() }
+                            .mapIndexed { index, step ->
+                                RecipeStep(text = step.text.trim(), order = index)
+                            }
+                    )
+                }
+            } else if (dto.ingredients.isNotEmpty() || dto.steps.isNotEmpty()) {
+                listOf(RecipeSection(
+                    name = "",
+                    ingredients = dto.ingredients
+                        .filter { it.name.isNotBlank() }
+                        .mapIndexed { index, ing ->
+                            Ingredient(
+                                name = ing.name.trim(),
+                                quantity = ing.quantity.trim(),
+                                unit = ing.unit.trim(),
+                                position = index
+                            )
+                        },
+                    steps = dto.steps
+                        .filter { it.text.isNotBlank() }
+                        .mapIndexed { index, step ->
+                            RecipeStep(text = step.text.trim(), order = index)
+                        }
+                ))
+            } else {
+                emptyList()
+            }
+
             Recipe(
                 title = dto.title.trim().ifBlank { DEFAULT_TITLE },
                 notes = dto.notes.trim(),
@@ -75,21 +126,7 @@ class JsonRecipeBackupCodec @Inject constructor() : RecipeBackupCodec {
                 isFavorite = dto.isFavorite,
                 createdAt = dto.createdAt ?: System.currentTimeMillis(),
                 updatedAt = dto.updatedAt ?: System.currentTimeMillis(),
-                ingredients = dto.ingredients
-                    .filter { it.name.isNotBlank() }
-                    .mapIndexed { index, ing ->
-                        Ingredient(
-                            name = ing.name.trim(),
-                            quantity = ing.quantity.trim(),
-                            unit = ing.unit.trim(),
-                            position = index
-                        )
-                    },
-                steps = dto.steps
-                    .filter { it.text.isNotBlank() }
-                    .mapIndexed { index, step ->
-                        RecipeStep(text = step.text.trim(), order = index)
-                    },
+                sections = sections,
                 tags = dto.tags
                     .map { it.name.trim() }
                     .filter { it.isNotBlank() }
@@ -103,7 +140,7 @@ class JsonRecipeBackupCodec @Inject constructor() : RecipeBackupCodec {
 
     @Serializable
     private data class BackupData(
-        val version: Int = 1,
+        val version: Int = 2,
         val exportedAt: Long = System.currentTimeMillis(),
         val recipes: List<BackupRecipeDto> = emptyList()
     )
@@ -120,9 +157,18 @@ class JsonRecipeBackupCodec @Inject constructor() : RecipeBackupCodec {
         val isFavorite: Boolean = false,
         val createdAt: Long? = null,
         val updatedAt: Long? = null,
+        val sections: List<BackupRecipeSectionDto> = emptyList(),
         val ingredients: List<BackupIngredientDto> = emptyList(),
         val steps: List<BackupStepDto> = emptyList(),
         val tags: List<BackupTagDto> = emptyList()
+    )
+
+    @Serializable
+    private data class BackupRecipeSectionDto(
+        val name: String = "",
+        val position: Int = 0,
+        val ingredients: List<BackupIngredientDto> = emptyList(),
+        val steps: List<BackupStepDto> = emptyList()
     )
 
     @Serializable

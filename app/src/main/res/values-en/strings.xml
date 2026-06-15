@@ -85,4 +85,32 @@
     <string name="share_ingredients_header">*Ingredients*</string>
     <string name="share_steps_header">*Preparation*</string>
     <string name="share_notes_header">*Notes*</string>
+
+    <!-- Recipe sections -->
+    <string name="recipe_sections">Recipe parts</string>
+    <string name="add_recipe_section">Add part</string>
+    <string name="remove_recipe_section">Remove part</string>
+    <string name="recipe_section_name">Part name</string>
+    <string name="recipe_section_name_hint">e.g. Dough, filling, topping</string>
+    <string name="section_ingredients">Ingredients for this part</string>
+    <string name="section_steps">Preparation for this part</string>
+    <string name="default_recipe_section">Main</string>
+
+    <!-- Cooking mode -->
+    <string name="start_cooking">Start cooking</string>
+    <string name="finish_cooking">Finish recipe</string>
+    <string name="exit_cooking_mode">Exit cooking mode</string>
+    <string name="cooking_ingredients">Ingredients</string>
+    <string name="cooking_steps">Preparation</string>
+    <string name="completed_ingredients_count">Ingredients: %1$d of %2$d</string>
+    <string name="completed_steps_count">Steps: %1$d of %2$d</string>
+    <string name="cooking_progress">Completed: %1$d%%</string>
+    <string name="keep_screen_on_notice">The screen will stay on until you finish the recipe.</string>
+    <string name="confirm_exit_cooking_title">Exit cooking mode?</string>
+    <string name="confirm_exit_cooking_message">Your progress will be lost when you exit.</string>
+    <string name="confirm_exit_cooking_confirm">Exit</string>
+    <string name="confirm_exit_cooking_cancel">Continue</string>
+    <string name="recipe_finished_message">Recipe completed!</string>
+    <string name="no_ingredients_in_section">No ingredients in this part.</string>
+    <string name="no_steps_in_section">No steps in this part.</string>
 </resources>

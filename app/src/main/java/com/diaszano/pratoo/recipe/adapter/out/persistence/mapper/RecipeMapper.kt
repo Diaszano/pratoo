@@ -4,17 +4,20 @@ import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.IngredientEntit
 import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.MeasurementCategoryEntity
 import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.MeasurementUnitEntity
 import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.RecipeEntity
+import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.RecipeSectionEntity
 import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.StepEntity
 import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.TagEntity
 import com.diaszano.pratoo.recipe.adapter.out.persistence.relation.MeasurementUnitWithCategory
 import com.diaszano.pratoo.recipe.adapter.out.persistence.relation.MeasurementUnitWithCategoryProjection
 import com.diaszano.pratoo.recipe.adapter.out.persistence.relation.RecipeListProjection
+import com.diaszano.pratoo.recipe.adapter.out.persistence.relation.RecipeSectionWithDetails
 import com.diaszano.pratoo.recipe.adapter.out.persistence.relation.RecipeWithDetails
 import com.diaszano.pratoo.recipe.domain.model.Ingredient
 import com.diaszano.pratoo.recipe.domain.model.MeasurementCategory
 import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
 import com.diaszano.pratoo.recipe.domain.model.Recipe
 import com.diaszano.pratoo.recipe.domain.model.RecipeListItem
+import com.diaszano.pratoo.recipe.domain.model.RecipeSection
 import com.diaszano.pratoo.recipe.domain.model.RecipeStep
 import com.diaszano.pratoo.recipe.domain.model.Tag
 
@@ -35,9 +38,16 @@ object RecipeMapper {
         isFavorite = recipe.isFavorite,
         createdAt = recipe.createdAt,
         updatedAt = recipe.updatedAt,
-        ingredients = ingredients.map { it.toDomain() },
-        steps = steps.map { it.toDomain() },
+        sections = sections.map { it.toDomain() },
         tags = tags.map { it.toDomain() }
+    )
+
+    fun RecipeSectionWithDetails.toDomain() = RecipeSection(
+        id = section.id,
+        name = section.name,
+        position = section.position,
+        ingredients = ingredients.map { it.toDomain() },
+        steps = steps.map { it.toDomain() }
     )
 
     fun RecipeListProjection.toDomain() = RecipeListItem(
@@ -109,18 +119,25 @@ object RecipeMapper {
         updatedAt = updatedAt
     )
 
-    fun Ingredient.toEntity(recipeId: Long) = IngredientEntity(
+    fun RecipeSection.toEntity(recipeId: Long) = RecipeSectionEntity(
         id = id,
         recipeId = recipeId,
+        name = name,
+        position = position
+    )
+
+    fun Ingredient.toEntity(sectionId: Long) = IngredientEntity(
+        id = id,
+        sectionId = sectionId,
         name = name,
         quantity = quantity,
         unit = unit,
         position = position
     )
 
-    fun RecipeStep.toEntity(recipeId: Long) = StepEntity(
+    fun RecipeStep.toEntity(sectionId: Long) = StepEntity(
         id = id,
-        recipeId = recipeId,
+        sectionId = sectionId,
         text = text,
         order = order
     )

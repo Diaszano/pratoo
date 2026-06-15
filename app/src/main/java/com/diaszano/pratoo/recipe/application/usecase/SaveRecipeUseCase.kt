@@ -15,8 +15,13 @@ class SaveRecipeUseCase @Inject constructor(
         if (errors.isNotEmpty()) throw ValidationException(errors)
 
         val normalized = recipe.copy(
-            ingredients = RecipeValidator.normalizeIngredients(recipe.ingredients),
-            steps = RecipeValidator.normalizeSteps(recipe.steps),
+            sections = recipe.sections.mapIndexed { sectionIndex, section ->
+                section.copy(
+                    position = sectionIndex,
+                    ingredients = RecipeValidator.normalizeIngredients(section.ingredients),
+                    steps = RecipeValidator.normalizeSteps(section.steps)
+                )
+            },
             tags = RecipeValidator.normalizeTags(recipe.tags)
         )
         return repository.saveRecipe(normalized)

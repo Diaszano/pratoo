@@ -1,6 +1,6 @@
 package com.diaszano.pratoo.recipe.domain.model
 
-/** Represents a complete recipe with metadata, ingredients, steps, and tags. */
+/** Represents a complete recipe with metadata, sections, and tags. */
 data class Recipe(
     val id: Long = 0,
     val title: String,
@@ -13,7 +13,6 @@ data class Recipe(
     val isFavorite: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val ingredients: List<Ingredient> = emptyList(),
-    val steps: List<RecipeStep> = emptyList(),
+    val sections: List<RecipeSection> = emptyList(),
     val tags: List<Tag> = emptyList()
 )
