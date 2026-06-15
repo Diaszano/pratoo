@@ -6,11 +6,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.diaszano.pratoo.backup.adapter.ui.BackupSettingsScreen
 import com.diaszano.pratoo.ui.cooking.CookingModeScreen
 import com.diaszano.pratoo.ui.recipedetail.RecipeDetailScreen
 import com.diaszano.pratoo.ui.recipeedit.RecipeEditScreen
 import com.diaszano.pratoo.ui.recipelist.RecipeListScreen
-import com.diaszano.pratoo.backup.adapter.ui.BackupSettingsScreen
 import com.diaszano.pratoo.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
 

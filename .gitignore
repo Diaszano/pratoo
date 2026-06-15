@@ -39,6 +39,9 @@ captures/
 *.swo
 *~
 
+# ── Node.js (semantic-release) ─────────────────────────────────────
+node_modules/
+
 # ── OS files ───────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
