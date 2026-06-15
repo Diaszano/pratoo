@@ -19,7 +19,7 @@ class BackupManager @Inject constructor(
         const val BACKUP_VERSION = 1
     }
 
-    private val json = Json { 
+    private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
     }
@@ -38,6 +38,8 @@ class BackupManager @Inject constructor(
                     cookTimeMinutes = recipe.recipe.cookTimeMinutes,
                     sourceUrl = recipe.recipe.sourceUrl,
                     isFavorite = recipe.recipe.isFavorite,
+                    createdAt = recipe.recipe.createdAt,
+                    updatedAt = recipe.recipe.updatedAt,
                     ingredients = recipe.ingredients.map {
                         BackupIngredientDto(it.name, it.quantity, it.unit, it.position)
                     },
@@ -67,22 +69,46 @@ class BackupManager @Inject constructor(
 
         backupData.recipes.forEach { dto ->
             val recipe = RecipeEntity(
-                title = dto.title,
-                notes = dto.notes,
+                title = dto.title.trim().ifBlank { "Receita sem título" },
+                notes = dto.notes.trim(),
                 imageUri = dto.imageUri,
-                servings = dto.servings,
-                prepTimeMinutes = dto.prepTimeMinutes,
-                cookTimeMinutes = dto.cookTimeMinutes,
+                servings = dto.servings.coerceAtLeast(1),
+                prepTimeMinutes = dto.prepTimeMinutes.coerceAtLeast(0),
+                cookTimeMinutes = dto.cookTimeMinutes.coerceAtLeast(0),
                 sourceUrl = dto.sourceUrl,
-                isFavorite = dto.isFavorite
+                isFavorite = dto.isFavorite,
+                createdAt = dto.createdAt ?: System.currentTimeMillis(),
+                updatedAt = dto.updatedAt ?: System.currentTimeMillis()
             )
-            val ingredients = dto.ingredients.map {
-                IngredientEntity(recipeId = 0L, name = it.name, quantity = it.quantity, unit = it.unit, position = it.position)
-            }
-            val steps = dto.steps.map {
-                StepEntity(recipeId = 0L, text = it.text, order = it.order)
-            }
-            val tags = dto.tags.map { TagEntity(name = it.name) }
+
+            val ingredients = dto.ingredients
+                .filter { it.name.isNotBlank() }
+                .mapIndexed { index, ingredient ->
+                    IngredientEntity(
+                        recipeId = 0L,
+                        name = ingredient.name.trim(),
+                        quantity = ingredient.quantity.trim(),
+                        unit = ingredient.unit.trim(),
+                        position = index
+                    )
+                }
+
+            val steps = dto.steps
+                .filter { it.text.isNotBlank() }
+                .mapIndexed { index, step ->
+                    StepEntity(
+                        recipeId = 0L,
+                        text = step.text.trim(),
+                        order = index
+                    )
+                }
+
+            val tags = dto.tags
+                .map { it.name.trim() }
+                .filter { it.isNotBlank() }
+                .distinctBy { it.lowercase() }
+                .map { TagEntity(name = it) }
+
             repository.saveRecipe(RecipeWithDetails(recipe, ingredients, steps, emptyList()), tags)
         }
     }

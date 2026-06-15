@@ -12,6 +12,8 @@ data class BackupRecipeDto(
     val cookTimeMinutes: Int = 0,
     val sourceUrl: String? = null,
     val isFavorite: Boolean = false,
+    val createdAt: Long? = null,
+    val updatedAt: Long? = null,
     val ingredients: List<BackupIngredientDto> = emptyList(),
     val steps: List<BackupStepDto> = emptyList(),
     val tags: List<BackupTagDto> = emptyList()
