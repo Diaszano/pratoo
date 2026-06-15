@@ -35,6 +35,16 @@ App Android de receitas pessoais — salve, organize e compartilhe suas receitas
 ./gradlew :app:assembleDebug
 ```
 
+## Qualidade de codigo
+
+Formatter e lint de estilo Kotlin usam `ktlint`, seguindo o estilo oficial do Kotlin. Para checagens Android, continue usando o `lint` do AGP.
+
+```bash
+./gradlew ktlintFormat
+./gradlew ktlintCheck
+./gradlew lint
+```
+
 ## Estrutura do projeto
 
 ```

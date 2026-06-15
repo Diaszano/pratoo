@@ -13,3 +13,11 @@ App Android de receitas pessoais com backup local, favoritos e compartilhamento.
 ```bash
 ./gradlew test
 ```
+
+## Estilo e lint
+
+```bash
+./gradlew ktlintFormat
+./gradlew ktlintCheck
+./gradlew lint
+```
