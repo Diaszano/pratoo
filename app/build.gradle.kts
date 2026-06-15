@@ -99,6 +99,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.work)
 
     // Navigation
     implementation(libs.navigation.compose)
@@ -111,6 +112,15 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
+
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+
+    // Google Play Services Auth
+    implementation(libs.play.services.auth)
+
+    // OkHttp
+    implementation(libs.okhttp)
 
     // Test
     testImplementation(libs.junit)
