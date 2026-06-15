@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload lint reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lint-reports
           path: |
@@ -85,7 +85,7 @@ jobs:
 
       - name: Upload test reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports
           path: app/build/reports/tests/
@@ -116,7 +116,7 @@ jobs:
         run: ./gradlew :app:assembleDebug
 
       - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pratoo-debug-apk
           path: app/build/outputs/apk/debug/*.apk
