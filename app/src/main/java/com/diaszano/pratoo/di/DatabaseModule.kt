@@ -14,7 +14,6 @@ import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.RecipeSectionDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.StepDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.dao.TagDao
 import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.MeasurementCategoryEntity
-import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.MeasurementUnitEntity
 import com.diaszano.pratoo.recipe.database.AppDatabase
 import com.diaszano.pratoo.recipe.domain.repository.RecipeBackupCodec
 import com.diaszano.pratoo.recipe.domain.repository.RecipeRepository
@@ -31,6 +30,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+    /**
+     * Provides the singleton [AppDatabase] instance.
+     *
+     * Database callback seeds measurement categories and units on first creation.
+     * Uses execSQL directly to avoid creating a second Room database instance.
+     */
     @Provides
     @Singleton
     fun provideDatabase(
@@ -38,56 +43,70 @@ object DatabaseModule {
     ): AppDatabase =
         Room
             .databaseBuilder(context, AppDatabase::class.java, "pratoo.db")
-            .addCallback(
-                object : RoomDatabase.Callback() {
-                    override fun onCreate(db: SupportSQLiteDatabase) {
-                        super.onCreate(db)
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val database =
-                                Room
-                                    .databaseBuilder(
-                                        context,
-                                        AppDatabase::class.java,
-                                        "pratoo.db",
-                                    ).build()
-                            seedDatabase(database)
-                        }
-                    }
-
-                    override fun onOpen(db: SupportSQLiteDatabase) {
-                        super.onOpen(db)
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val database =
-                                Room
-                                    .databaseBuilder(
-                                        context,
-                                        AppDatabase::class.java,
-                                        "pratoo.db",
-                                    ).build()
-                            seedDatabase(database)
-                        }
-                    }
-                },
-            ).fallbackToDestructiveMigration(false)
+            .addCallback(SeedCallback())
+            .fallbackToDestructiveMigration(false)
             .build()
 
-    private suspend fun seedDatabase(database: AppDatabase) {
-        val categoryDao = database.measurementCategoryDao()
-        val unitDao = database.measurementUnitDao()
-
-        // Seed categories if empty
-        if (categoryDao.count() == 0) {
-            categoryDao.insertAll(defaultCategories())
+    /**
+     * Database callback that seeds reference data (measurement categories and units)
+     * on first creation or when the tables are empty.
+     *
+     * Uses execSQL for inserts to avoid opening a second Room connection.
+     */
+    private class SeedCallback : RoomDatabase.Callback() {
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            super.onCreate(db)
+            CoroutineScope(Dispatchers.IO).launch {
+                seedCategories(db)
+                seedUnits(db)
+            }
         }
 
-        // Seed units if empty
-        if (unitDao.count() == 0) {
-            val categories = categoryDao.getAll().associateBy { it.code }
-            unitDao.insertAll(defaultMeasurementUnits(categories))
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
+            // onOpen is called every time the database is opened.
+            // Only seed if tables are empty (recovery after database deletion).
+            CoroutineScope(Dispatchers.IO).launch {
+                val categoryCount =
+                    db
+                        .query("SELECT COUNT(*) FROM measurement_categories")
+                        .use {
+                            it.moveToFirst()
+                            it.getLong(0)
+                        }
+                if (categoryCount == 0L) {
+                    seedCategories(db)
+                    seedUnits(db)
+                }
+            }
+        }
+
+        private fun seedCategories(db: SupportSQLiteDatabase) {
+            val categories = defaultCategories()
+            categories.forEach { category ->
+                db.execSQL(
+                    "INSERT OR IGNORE INTO measurement_categories (code, display_name, sort_order) VALUES (?, ?, ?)",
+                    arrayOf(category.code, category.displayName, category.sortOrder),
+                )
+            }
+        }
+
+        private fun seedUnits(db: SupportSQLiteDatabase) {
+            val categories = defaultCategories().associateBy { it.code }
+            val units = defaultMeasurementUnitsWithCode(categories.keys)
+            units.forEach { (abbreviation, displayName, categoryCode) ->
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO measurement_units (abbreviation, displayName, category_id)
+                    SELECT ?, ?, id FROM measurement_categories WHERE code = ?
+                    """.trimIndent(),
+                    arrayOf(abbreviation, displayName, categoryCode),
+                )
+            }
         }
     }
 
-    private fun defaultCategories() =
+    internal fun defaultCategories(): List<MeasurementCategoryEntity> =
         listOf(
             MeasurementCategoryEntity(code = "weight", displayName = "Weight", sortOrder = 10),
             MeasurementCategoryEntity(code = "volume", displayName = "Volume", sortOrder = 20),
@@ -99,51 +118,54 @@ object DatabaseModule {
             MeasurementCategoryEntity(code = "other", displayName = "Other", sortOrder = 80),
         )
 
-    private fun defaultMeasurementUnits(categories: Map<String, MeasurementCategoryEntity>) =
-        listOf(
-            MeasurementUnitEntity(abbreviation = "kg", displayName = "Quilograma", categoryId = categories.getValue("weight").id),
-            MeasurementUnitEntity(abbreviation = "g", displayName = "Grama", categoryId = categories.getValue("weight").id),
-            MeasurementUnitEntity(abbreviation = "mg", displayName = "Miligrama", categoryId = categories.getValue("weight").id),
-            MeasurementUnitEntity(abbreviation = "lb", displayName = "Libra", categoryId = categories.getValue("weight").id),
-            MeasurementUnitEntity(abbreviation = "oz", displayName = "Onça", categoryId = categories.getValue("weight").id),
-            MeasurementUnitEntity(abbreviation = "L", displayName = "Litro", categoryId = categories.getValue("volume").id),
-            MeasurementUnitEntity(abbreviation = "ml", displayName = "Mililitro", categoryId = categories.getValue("volume").id),
-            MeasurementUnitEntity(abbreviation = "fl oz", displayName = "Onça fluida", categoryId = categories.getValue("volume").id),
-            MeasurementUnitEntity(abbreviation = "xíc", displayName = "Xícara", categoryId = categories.getValue("kitchen").id),
-            MeasurementUnitEntity(abbreviation = "1/2 xíc", displayName = "Meia xícara", categoryId = categories.getValue("kitchen").id),
-            MeasurementUnitEntity(abbreviation = "cs", displayName = "Colher de sopa", categoryId = categories.getValue("kitchen").id),
-            MeasurementUnitEntity(abbreviation = "ct", displayName = "Colher de chá", categoryId = categories.getValue("kitchen").id),
-            MeasurementUnitEntity(abbreviation = "cc", displayName = "Colher de café", categoryId = categories.getValue("kitchen").id),
-            MeasurementUnitEntity(abbreviation = "copo", displayName = "Copo", categoryId = categories.getValue("kitchen").id),
-            MeasurementUnitEntity(
-                abbreviation = "copo amer.",
-                displayName = "Copo americano",
-                categoryId = categories.getValue("kitchen").id,
-            ),
-            MeasurementUnitEntity(abbreviation = "un", displayName = "Unidade", categoryId = categories.getValue("count").id),
-            MeasurementUnitEntity(abbreviation = "dz", displayName = "Dúzia", categoryId = categories.getValue("count").id),
-            MeasurementUnitEntity(abbreviation = "par", displayName = "Par", categoryId = categories.getValue("count").id),
-            MeasurementUnitEntity(abbreviation = "fatia", displayName = "Fatia", categoryId = categories.getValue("portion").id),
-            MeasurementUnitEntity(abbreviation = "pedaço", displayName = "Pedaço", categoryId = categories.getValue("portion").id),
-            MeasurementUnitEntity(abbreviation = "porção", displayName = "Porção", categoryId = categories.getValue("portion").id),
-            MeasurementUnitEntity(abbreviation = "rodela", displayName = "Rodela", categoryId = categories.getValue("portion").id),
-            MeasurementUnitEntity(abbreviation = "cubo", displayName = "Cubo", categoryId = categories.getValue("portion").id),
-            MeasurementUnitEntity(abbreviation = "dente", displayName = "Dente", categoryId = categories.getValue("ingredient_unit").id),
-            MeasurementUnitEntity(abbreviation = "folha", displayName = "Folha", categoryId = categories.getValue("ingredient_unit").id),
-            MeasurementUnitEntity(abbreviation = "ramo", displayName = "Ramo", categoryId = categories.getValue("ingredient_unit").id),
-            MeasurementUnitEntity(abbreviation = "maço", displayName = "Maço", categoryId = categories.getValue("ingredient_unit").id),
-            MeasurementUnitEntity(abbreviation = "lata", displayName = "Lata", categoryId = categories.getValue("package").id),
-            MeasurementUnitEntity(abbreviation = "garrafa", displayName = "Garrafa", categoryId = categories.getValue("package").id),
-            MeasurementUnitEntity(abbreviation = "pacote", displayName = "Pacote", categoryId = categories.getValue("package").id),
-            MeasurementUnitEntity(abbreviation = "sachê", displayName = "Sachê", categoryId = categories.getValue("package").id),
-            MeasurementUnitEntity(abbreviation = "caixa", displayName = "Caixa", categoryId = categories.getValue("package").id),
-            MeasurementUnitEntity(abbreviation = "vidro", displayName = "Vidro", categoryId = categories.getValue("package").id),
-            MeasurementUnitEntity(abbreviation = "tablete", displayName = "Tablete", categoryId = categories.getValue("package").id),
-            MeasurementUnitEntity(abbreviation = "pitada", displayName = "Pitada", categoryId = categories.getValue("other").id),
-            MeasurementUnitEntity(abbreviation = "fio", displayName = "Fio", categoryId = categories.getValue("other").id),
-            MeasurementUnitEntity(abbreviation = "q.b.", displayName = "Quanto baste", categoryId = categories.getValue("other").id),
-            MeasurementUnitEntity(abbreviation = "a gosto", displayName = "A gosto", categoryId = categories.getValue("other").id),
-        )
+    /**
+     * Returns measurement units keyed by category code for SQL-based seeding.
+     * Each entry is a triple of (abbreviation, displayName, categoryCode).
+     */
+    internal fun defaultMeasurementUnitsWithCode(categoryCodes: Set<String>): List<Triple<String, String, String>> {
+        val all =
+            listOf(
+                Triple("kg", "Quilograma", "weight"),
+                Triple("g", "Grama", "weight"),
+                Triple("mg", "Miligrama", "weight"),
+                Triple("lb", "Libra", "weight"),
+                Triple("oz", "Onça", "weight"),
+                Triple("L", "Litro", "volume"),
+                Triple("ml", "Mililitro", "volume"),
+                Triple("fl oz", "Onça fluida", "volume"),
+                Triple("xíc", "Xícara", "kitchen"),
+                Triple("1/2 xíc", "Meia xícara", "kitchen"),
+                Triple("cs", "Colher de sopa", "kitchen"),
+                Triple("ct", "Colher de chá", "kitchen"),
+                Triple("cc", "Colher de café", "kitchen"),
+                Triple("copo", "Copo", "kitchen"),
+                Triple("copo amer.", "Copo americano", "kitchen"),
+                Triple("un", "Unidade", "count"),
+                Triple("dz", "Dúzia", "count"),
+                Triple("par", "Par", "count"),
+                Triple("fatia", "Fatia", "portion"),
+                Triple("pedaço", "Pedaço", "portion"),
+                Triple("porção", "Porção", "portion"),
+                Triple("rodela", "Rodela", "portion"),
+                Triple("cubo", "Cubo", "portion"),
+                Triple("dente", "Dente", "ingredient_unit"),
+                Triple("folha", "Folha", "ingredient_unit"),
+                Triple("ramo", "Ramo", "ingredient_unit"),
+                Triple("maço", "Maço", "ingredient_unit"),
+                Triple("lata", "Lata", "package"),
+                Triple("garrafa", "Garrafa", "package"),
+                Triple("pacote", "Pacote", "package"),
+                Triple("sachê", "Sachê", "package"),
+                Triple("caixa", "Caixa", "package"),
+                Triple("vidro", "Vidro", "package"),
+                Triple("tablete", "Tablete", "package"),
+                Triple("pitada", "Pitada", "other"),
+                Triple("fio", "Fio", "other"),
+                Triple("q.b.", "Quanto baste", "other"),
+                Triple("a gosto", "A gosto", "other"),
+            )
+        return all.filter { it.third in categoryCodes }
+    }
 
     @Provides fun provideRecipeDao(database: AppDatabase): RecipeDao = database.recipeDao()
 

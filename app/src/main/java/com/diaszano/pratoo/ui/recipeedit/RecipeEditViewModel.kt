@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.diaszano.pratoo.R
+import com.diaszano.pratoo.recipe.application.usecase.GetRecipeUseCase
 import com.diaszano.pratoo.recipe.application.usecase.ObserveMeasurementUnitsUseCase
 import com.diaszano.pratoo.recipe.application.usecase.ObserveTagsUseCase
 import com.diaszano.pratoo.recipe.application.usecase.SaveRecipeUseCase
@@ -75,6 +76,7 @@ class RecipeEditViewModel
         savedStateHandle: SavedStateHandle,
         observeTags: ObserveTagsUseCase,
         observeMeasurementUnits: ObserveMeasurementUnitsUseCase,
+        private val getRecipe: GetRecipeUseCase,
         private val saveRecipe: SaveRecipeUseCase,
         private val repository: RecipeRepository,
         @ApplicationContext private val context: Context,
@@ -102,7 +104,7 @@ class RecipeEditViewModel
         init {
             if (recipeId != null) {
                 viewModelScope.launch {
-                    val recipe = repository.getRecipe(recipeId) ?: return@launch
+                    val recipe = getRecipe.once(recipeId) ?: return@launch
                     _uiState.update {
                         it.copy(
                             title = recipe.title,

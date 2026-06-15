@@ -17,7 +17,7 @@ interface TagDao {
     @Query("SELECT * FROM tags ORDER BY name")
     suspend fun getAll(): List<TagEntity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(tag: TagEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

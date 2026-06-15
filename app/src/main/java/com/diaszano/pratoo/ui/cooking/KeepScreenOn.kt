@@ -8,6 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 
+/**
+ * Walks the [ContextWrapper] chain to find the hosting [Activity].
+ * Returns `null` if no Activity is found (e.g., in a non-activity context).
+ */
 fun Context.findActivity(): Activity? {
     var context = this
     while (context is ContextWrapper) {
@@ -17,6 +21,12 @@ fun Context.findActivity(): Activity? {
     return null
 }
 
+/**
+ * Keeps the device screen on while [enabled].
+ * Restores the normal screen timeout behavior on disposal.
+ *
+ * Used by cooking mode to prevent the screen from dimming while following a recipe.
+ */
 @Composable
 fun KeepScreenOn(enabled: Boolean = true) {
     val context = LocalContext.current

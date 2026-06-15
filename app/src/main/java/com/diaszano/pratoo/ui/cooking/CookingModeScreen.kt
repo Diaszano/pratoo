@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -48,6 +49,7 @@ fun CookingModeScreen(
     viewModel: CookingModeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     KeepScreenOn(enabled = !uiState.isFinished)
@@ -56,10 +58,7 @@ fun CookingModeScreen(
         if (uiState.isFinished) {
             if (uiState.completedIngredientIds.isNotEmpty() || uiState.completedStepIds.isNotEmpty()) {
                 snackbarHostState.showSnackbar(
-                    message =
-                        com.diaszano.pratoo.R.string.recipe_finished_message.let { resId ->
-                            ""
-                        },
+                    message = context.getString(R.string.recipe_finished_message),
                 )
             }
             onNavigateBack()
