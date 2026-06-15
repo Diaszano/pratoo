@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.Color
+import com.diaszano.pratoo.ui.theme.MoonlightFavorite
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -112,7 +113,7 @@ fun RecipeDetailScreen(
                             Icon(
                                 Icons.Filled.Star,
                                 contentDescription = if (recipe.isFavorite) stringResource(R.string.unfavorite) else stringResource(R.string.favorite),
-                                tint = if (recipe.isFavorite) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = if (recipe.isFavorite) MoonlightFavorite else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

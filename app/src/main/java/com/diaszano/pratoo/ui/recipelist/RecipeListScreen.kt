@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.diaszano.pratoo.ui.theme.MoonlightFavorite
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -240,7 +241,7 @@ private fun RecipeCard(
                     Icon(
                         Icons.Filled.Star,
                         contentDescription = stringResource(R.string.favorite),
-                        tint = Color(0xFFFFC107),
+                        tint = MoonlightFavorite,
                         modifier = Modifier.size(20.dp)
                     )
                 }
