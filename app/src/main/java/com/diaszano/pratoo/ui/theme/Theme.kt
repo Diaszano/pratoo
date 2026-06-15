@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
@@ -64,25 +65,31 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val MoonlightColorScheme = darkColorScheme(
-    primary = md_theme_moonlight_primary,
-    onPrimary = md_theme_moonlight_onPrimary,
-    primaryContainer = md_theme_moonlight_primaryContainer,
-    onPrimaryContainer = md_theme_moonlight_onPrimaryContainer,
-    secondary = md_theme_moonlight_secondary,
-    onSecondary = md_theme_moonlight_onSecondary,
-    secondaryContainer = md_theme_moonlight_secondaryContainer,
-    onSecondaryContainer = md_theme_moonlight_onSecondaryContainer,
-    tertiary = md_theme_moonlight_tertiary,
-    onTertiary = md_theme_moonlight_onTertiary,
-    tertiaryContainer = md_theme_moonlight_tertiaryContainer,
-    onTertiaryContainer = md_theme_moonlight_onTertiaryContainer,
-    error = md_theme_moonlight_error,
-    background = md_theme_moonlight_background,
-    onBackground = md_theme_moonlight_onBackground,
-    surface = md_theme_moonlight_surface,
-    onSurface = md_theme_moonlight_onSurface,
-    surfaceVariant = md_theme_moonlight_surfaceVariant,
-    onSurfaceVariant = md_theme_moonlight_onSurfaceVariant,
+    primary = MoonlightBlue,
+    onPrimary = MoonlightGray1,
+    primaryContainer = MoonlightGray5,
+    onPrimaryContainer = MoonlightGray10,
+    secondary = MoonlightPurple,
+    onSecondary = MoonlightGray1,
+    secondaryContainer = MoonlightGray5,
+    onSecondaryContainer = MoonlightGray9,
+    tertiary = MoonlightTeal,
+    onTertiary = MoonlightGray1,
+    tertiaryContainer = MoonlightGray5,
+    onTertiaryContainer = MoonlightGreen,
+    error = MoonlightDarkRed,
+    onError = MoonlightGray1,
+    background = MoonlightGray4,
+    onBackground = MoonlightGray10,
+    surface = MoonlightGray3,
+    onSurface = MoonlightGray10,
+    surfaceVariant = MoonlightGray5,
+    onSurfaceVariant = MoonlightGray8,
+    outline = MoonlightGray6,
+    outlineVariant = MoonlightGray5,
+    inverseSurface = MoonlightGray10,
+    inverseOnSurface = MoonlightGray1,
+    inversePrimary = Color(0xFF3D6FE0),
 )
 
 @Composable

@@ -2,6 +2,47 @@ package com.diaszano.pratoo.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// ── Moonlight Gray Scale ────────────────────────────────────────────
+val MoonlightGray1 = Color(0xFF131421)
+val MoonlightGray2 = Color(0xFF191A2A)
+val MoonlightGray3 = Color(0xFF1E2030)
+val MoonlightGray4 = Color(0xFF222436)
+val MoonlightGray5 = Color(0xFF2F334D)
+val MoonlightGray6 = Color(0xFF444A73)
+val MoonlightGray7 = Color(0xFF828BB8)
+val MoonlightGray8 = Color(0xFFA9B8E8)
+val MoonlightGray9 = Color(0xFFB4C2F0)
+val MoonlightGray10 = Color(0xFFC8D3F5)
+
+// ── Moonlight Accent Colors ─────────────────────────────────────────
+val MoonlightBlue = Color(0xFF7CAFFF)
+val MoonlightSky = Color(0xFF60BDFF)
+val MoonlightPurple = Color(0xFFC4A2FF)
+val MoonlightIndigo = Color(0xFFAF9FFF)
+val MoonlightTeal = Color(0xFF3AD7C7)
+val MoonlightCyan = Color(0xFF78DBFF)
+val MoonlightGreen = Color(0xFFC3E88D)
+val MoonlightYellow = Color(0xFFFFC777)
+val MoonlightOrange = Color(0xFFFF966C)
+val MoonlightRed = Color(0xFFFF757F)
+val MoonlightDarkRed = Color(0xFFFF5370)
+val MoonlightPink = Color(0xFFFCA7EA)
+
+// ── Semantic Colors ─────────────────────────────────────────────────
+val MoonlightBackground = MoonlightGray4
+val MoonlightSurface = MoonlightGray3
+val MoonlightSurfaceVariant = MoonlightGray5
+val MoonlightText = MoonlightGray10
+val MoonlightTextMuted = MoonlightGray7
+val MoonlightPrimary = MoonlightBlue
+val MoonlightSecondary = MoonlightPurple
+val MoonlightTertiary = MoonlightTeal
+val MoonlightError = MoonlightDarkRed
+val MoonlightFavorite = MoonlightYellow
+val MoonlightSuccess = MoonlightGreen
+val MoonlightTimeAccent = MoonlightOrange
+
+// ── Legacy palette names (light/dark) kept for compatibility ────────
 val md_theme_light_primary = Color(0xFF825500)
 val md_theme_light_onPrimary = Color(0xFFFFFFFF)
 val md_theme_light_primaryContainer = Color(0xFFFFDDB2)
@@ -41,24 +82,3 @@ val md_theme_dark_surface = Color(0xFF1F1B16)
 val md_theme_dark_onSurface = Color(0xFFEBE1D9)
 val md_theme_dark_surfaceVariant = Color(0xFF4F4539)
 val md_theme_dark_onSurfaceVariant = Color(0xFFD4C4B4)
-
-// Moonlight theme — deep blue-purple dark palette
-val md_theme_moonlight_primary = Color(0xFF7AA2F7)
-val md_theme_moonlight_onPrimary = Color(0xFF1A1B26)
-val md_theme_moonlight_primaryContainer = Color(0xFF3B4261)
-val md_theme_moonlight_onPrimaryContainer = Color(0xFFC0CAF5)
-val md_theme_moonlight_secondary = Color(0xFFBB9AF7)
-val md_theme_moonlight_onSecondary = Color(0xFF1A1B26)
-val md_theme_moonlight_secondaryContainer = Color(0xFF3B3055)
-val md_theme_moonlight_onSecondaryContainer = Color(0xFFCFBAF8)
-val md_theme_moonlight_tertiary = Color(0xFF9ECE6A)
-val md_theme_moonlight_onTertiary = Color(0xFF1A1B26)
-val md_theme_moonlight_tertiaryContainer = Color(0xFF2D4A30)
-val md_theme_moonlight_onTertiaryContainer = Color(0xFFC5F5A0)
-val md_theme_moonlight_error = Color(0xFFF7768E)
-val md_theme_moonlight_background = Color(0xFF1A1B26)
-val md_theme_moonlight_onBackground = Color(0xFFC0CAF5)
-val md_theme_moonlight_surface = Color(0xFF24283B)
-val md_theme_moonlight_onSurface = Color(0xFFC0CAF5)
-val md_theme_moonlight_surfaceVariant = Color(0xFF3B4261)
-val md_theme_moonlight_onSurfaceVariant = Color(0xFFA9B1D6)
