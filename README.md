@@ -1,6 +1,11 @@
 # Pratoo
 
-App Android de receitas pessoais — salve, organize e compartilhe suas receitas favoritas.
+> App Android de receitas pessoais — salve, organize e compartilhe suas receitas favoritas.
+
+![CI](https://github.com/Diaszano/pratoo/actions/workflows/build.yml/badge.svg)
+![License](https://img.shields.io/github/license/Diaszano/pratoo)
+![Kotlin](https://img.shields.io/badge/kotlin-2.2.10-purple)
+![Android SDK](https://img.shields.io/badge/minSDK-29-brightgreen)
 
 ## Funcionalidades
 
@@ -10,19 +15,30 @@ App Android de receitas pessoais — salve, organize e compartilhe suas receitas
 - **Tags** — crie e gerencie tags para organizar suas receitas
 - **Unidades de medida** — 23 unidades pré-cadastradas (g, kg, xícara, colher de sopa, etc.)
 - **Reordenação de passos** — mova os passos do modo de preparo para cima e para baixo
+- **Modo preparo** — modo passo-a-passo com checklist de ingredientes
 - **Compartilhar** — envie receitas formatadas direto para WhatsApp ou outros apps
-- **Backup** — exporte e importe todas as receitas em JSON
+- **Backup manual** — exporte e importe todas as receitas em JSON
+- **Backup Google Drive** — backup automático diário na nuvem com criptografia (escopo `drive.appdata`) 🔒
+- **Restauração seletiva** — escolha qual backup do Drive restaurar
 - **4 temas** — Sistema, Claro, Escuro e Moonlight (paleta azul-escura inspirada em Tokyo Night)
 
 ## Stack
 
-- Kotlin
-- Jetpack Compose (Material 3)
-- Room (banco de dados local)
-- Hilt (dependency injection)
-- Navigation Compose (navegação tipada)
-- DataStore (preferências)
-- Coil (carregamento de imagens)
+| Camada | Tecnologia |
+|--------|-----------|
+| Linguagem | Kotlin 2.2 |
+| UI | Jetpack Compose (Material 3) |
+| Arquitetura | DDD / Hexagonal |
+| Banco de dados | Room |
+| DI | Hilt |
+| Navegação | Navigation Compose (tipada) |
+| Preferências | DataStore |
+| Cloud backup | Google Drive API (`drive.appdata`) |
+| Backup automático | WorkManager |
+| Imagens | Coil |
+| Serialização | kotlinx-serialization |
+| HTTP | OkHttp |
+| Formatação | ktlint |
 
 ## Como rodar
 
@@ -35,38 +51,71 @@ App Android de receitas pessoais — salve, organize e compartilhe suas receitas
 ./gradlew :app:assembleDebug
 ```
 
-## Qualidade de codigo
-
-Formatter e lint de estilo Kotlin usam `ktlint`, seguindo o estilo oficial do Kotlin. Para checagens Android, continue usando o `lint` do AGP.
+## Qualidade de código
 
 ```bash
+# Formatar código Kotlin
 ./gradlew ktlintFormat
+
+# Verificar estilo
 ./gradlew ktlintCheck
-./gradlew lint
+
+# Verificar lint Android
+./gradlew :app:lintDebug
+
+# Rodar testes
+./gradlew test
+```
+
+O repositório usa **pre-commit hooks** para rodar essas verificações automaticamente antes de cada commit. Configure com:
+
+```bash
+pip install pre-commit
+pre-commit install
 ```
 
 ## Estrutura do projeto
 
 ```
 app/src/main/java/com/diaszano/pratoo/
+├── backup/            # Backup Google Drive (domain/application/adapter/UI)
+│   ├── domain/        # Modelos e portas
+│   ├── application/   # Casos de uso
+│   └── adapter/       # Cloud storage, worker, settings, UI
 ├── data/
-│   ├── local/
-│   │   ├── dao/          # DAOs do Room
-│   │   ├── entity/       # Entidades do banco
-│   │   └── relation/     # Relações e projeções
-│   ├── repository/       # Repository pattern
-│   └── settings/         # Preferências do app
-├── di/                   # Módulos Hilt
+│   ├── local/         # DAOs, entidades, relações (Room)
+│   ├── repository/    # Repository pattern
+│   └── settings/      # Preferências do app
+├── di/                # Módulos Hilt
 ├── ui/
-│   ├── recipeedit/       # Tela de criação/edição
-│   ├── recipedetail/     # Tela de detalhe
-│   ├── recipelist/       # Tela inicial (grid)
-│   ├── settings/         # Configurações
-│   ├── shared/           # Componentes reutilizáveis
-│   └── theme/            # Temas e cores
-└── navigation/           # Rotas tipadas
+│   ├── recipeedit/    # Tela de criação/edição
+│   ├── recipedetail/  # Tela de detalhe
+│   ├── recipelist/    # Tela inicial (grid)
+│   ├── settings/      # Configurações
+│   ├── cooking/       # Modo preparo
+│   ├── shared/        # Componentes reutilizáveis
+│   └── theme/         # Temas e cores
+└── navigation/        # Rotas tipadas
 ```
+
+## Releases
+
+As releases são geradas automaticamente via GitHub Actions. Basta criar uma tag semântica:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+O CI vai:
+1. Buildar o APK e AAB de release
+2. Assinar (se as secrets estiverem configuradas)
+3. Criar uma GitHub Release com os artefatos
+
+## Como contribuir
+
+Veja o [CONTRIBUTING.md](CONTRIBUTING.md) para diretrizes detalhadas.
 
 ## Licença
 
-MIT
+MIT © [Diaszano](https://github.com/Diaszano)
