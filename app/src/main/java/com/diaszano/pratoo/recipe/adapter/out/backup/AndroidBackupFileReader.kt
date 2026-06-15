@@ -7,12 +7,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AndroidBackupFileReader @Inject constructor(
-    @ApplicationContext private val context: Context
-) {
-    fun read(uri: Uri): String {
-        val inputStream = context.contentResolver.openInputStream(uri)
-            ?: throw IllegalStateException("Could not open file")
-        return inputStream.bufferedReader().use { it.readText() }
+class AndroidBackupFileReader
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) {
+        fun read(uri: Uri): String {
+            val inputStream =
+                context.contentResolver.openInputStream(uri)
+                    ?: throw IllegalStateException("Could not open file")
+            return inputStream.bufferedReader().use { it.readText() }
+        }
     }
-}
