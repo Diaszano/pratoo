@@ -24,7 +24,6 @@ class AppPreferences @Inject constructor(
         const val THEME_DARK = "dark"
         const val THEME_MOONLIGHT = "moonlight"
         const val UNIT_METRIC = "metric"
-        const val UNIT_IMPERIAL = "imperial"
     }
 
     val themeMode: Flow<ThemeMode> = dataStore.data.map { prefs ->
