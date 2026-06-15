@@ -44,23 +44,25 @@ import com.diaszano.pratoo.R
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json")
-    ) { uri: Uri? ->
-        uri?.let { viewModel.exportToUri(it, context) }
-    }
+    val exportLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/json"),
+        ) { uri: Uri? ->
+            uri?.let { viewModel.exportToUri(it, context) }
+        }
 
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        uri?.let { viewModel.importFromUri(it, context) }
-    }
+    val importLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+        ) { uri: Uri? ->
+            uri?.let { viewModel.importFromUri(it, context) }
+        }
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let {
@@ -78,23 +80,24 @@ fun SettingsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.cancel))
                     }
-                }
+                },
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
         ) {
             Text(stringResource(R.string.backup), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(8.dp))
             Text(
                 stringResource(R.string.backup_description),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))
 
@@ -103,7 +106,7 @@ fun SettingsScreen(
                     exportLauncher.launch("pratoo-backup.json")
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !uiState.isExporting
+                enabled = !uiState.isExporting,
             ) {
                 Icon(Icons.Default.FileDownload, null)
                 Spacer(Modifier.padding(ButtonDefaults.IconSpacing))
@@ -115,7 +118,7 @@ fun SettingsScreen(
             OutlinedButton(
                 onClick = { importLauncher.launch(arrayOf("application/json")) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !uiState.isImporting
+                enabled = !uiState.isImporting,
             ) {
                 Icon(Icons.Default.FileUpload, null)
                 Spacer(Modifier.padding(ButtonDefaults.IconSpacing))
@@ -130,20 +133,21 @@ fun SettingsScreen(
             Text(
                 stringResource(R.string.theme_palette),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                val paletteOptions = listOf(
-                    "pratoo" to R.string.theme_pratoo,
-                    "moonlight" to R.string.theme_moonlight
-                )
+                val paletteOptions =
+                    listOf(
+                        "pratoo" to R.string.theme_pratoo,
+                        "moonlight" to R.string.theme_moonlight,
+                    )
                 paletteOptions.forEach { (value, labelRes) ->
                     FilterChip(
                         selected = uiState.appTheme == value,
                         onClick = { viewModel.onAppThemeChange(value) },
                         label = { Text(stringResource(labelRes)) },
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     )
                 }
             }
@@ -153,21 +157,22 @@ fun SettingsScreen(
             Text(
                 stringResource(R.string.theme_mode),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                val modeOptions = listOf(
-                    "system" to R.string.theme_system,
-                    "light" to R.string.theme_light,
-                    "dark" to R.string.theme_dark
-                )
+                val modeOptions =
+                    listOf(
+                        "system" to R.string.theme_system,
+                        "light" to R.string.theme_light,
+                        "dark" to R.string.theme_dark,
+                    )
                 modeOptions.forEach { (value, labelRes) ->
                     FilterChip(
                         selected = uiState.themeMode == value,
                         onClick = { viewModel.onThemeModeChange(value) },
                         label = { Text(stringResource(labelRes)) },
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     )
                 }
             }
@@ -178,20 +183,21 @@ fun SettingsScreen(
             Text(
                 stringResource(R.string.unit_system),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                val unitOptions = listOf(
-                    "metric" to R.string.unit_metric,
-                    "imperial" to R.string.unit_imperial
-                )
+                val unitOptions =
+                    listOf(
+                        "metric" to R.string.unit_metric,
+                        "imperial" to R.string.unit_imperial,
+                    )
                 unitOptions.forEach { (value, labelRes) ->
                     FilterChip(
                         selected = uiState.unitSystem == value,
                         onClick = { viewModel.onUnitSystemChange(value) },
                         label = { Text(stringResource(labelRes)) },
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 8.dp),
                     )
                 }
             }

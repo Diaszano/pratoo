@@ -13,7 +13,13 @@ object Spacing {
 }
 
 object AppShape {
-    val card = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-    val chip = androidx.compose.foundation.shape.RoundedCornerShape(percent = 50)
-    val bottomSheetTop = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    val card =
+        androidx.compose.foundation.shape
+            .RoundedCornerShape(12.dp)
+    val chip =
+        androidx.compose.foundation.shape
+            .RoundedCornerShape(percent = 50)
+    val bottomSheetTop =
+        androidx.compose.foundation.shape
+            .RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
 }

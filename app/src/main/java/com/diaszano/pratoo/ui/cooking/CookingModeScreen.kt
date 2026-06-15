@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -33,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -47,7 +45,7 @@ import com.diaszano.pratoo.R
 fun CookingModeScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: CookingModeViewModel = hiltViewModel()
+    viewModel: CookingModeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -58,9 +56,10 @@ fun CookingModeScreen(
         if (uiState.isFinished) {
             if (uiState.completedIngredientIds.isNotEmpty() || uiState.completedStepIds.isNotEmpty()) {
                 snackbarHostState.showSnackbar(
-                    message = com.diaszano.pratoo.R.string.recipe_finished_message.let { resId ->
-                        ""
-                    }
+                    message =
+                        com.diaszano.pratoo.R.string.recipe_finished_message.let { resId ->
+                            ""
+                        },
                 )
             }
             onNavigateBack()
@@ -76,26 +75,27 @@ fun CookingModeScreen(
                     IconButton(onClick = { viewModel.onExitCooking() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.exit_cooking_mode))
                     }
-                }
+                },
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         if (uiState.isLoading) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(stringResource(R.string.cooking_ingredients), style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
             ) {
                 val totalIngredients = uiState.sections.sumOf { it.ingredients.size }
                 val totalSteps = uiState.sections.sumOf { it.steps.size }
@@ -114,27 +114,27 @@ fun CookingModeScreen(
                 Text(
                     stringResource(R.string.cooking_progress, (progress * 100).toInt()),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (totalIngredients > 0) {
                     Text(
                         stringResource(R.string.completed_ingredients_count, uiState.completedIngredientIds.size, totalIngredients),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 if (totalSteps > 0) {
                     Text(
                         stringResource(R.string.completed_steps_count, uiState.completedStepIds.size, totalSteps),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
                 Text(
                     stringResource(R.string.keep_screen_on_notice),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 uiState.sections.forEach { section ->
@@ -144,7 +144,7 @@ fun CookingModeScreen(
                             section.name.ifBlank { stringResource(R.string.default_recipe_section) },
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                     }
 
@@ -153,7 +153,7 @@ fun CookingModeScreen(
                         Text(
                             stringResource(R.string.cooking_ingredients),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(4.dp))
                         section.ingredients.forEach { item ->
@@ -161,7 +161,7 @@ fun CookingModeScreen(
                             CookingItemRow(
                                 text = item.displayText,
                                 checked = checked,
-                                onCheckedChange = { viewModel.onIngredientCheckedChange(item.id, it) }
+                                onCheckedChange = { viewModel.onIngredientCheckedChange(item.id, it) },
                             )
                         }
                     }
@@ -171,7 +171,7 @@ fun CookingModeScreen(
                         Text(
                             stringResource(R.string.cooking_steps),
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(4.dp))
                         section.steps.forEach { item ->
@@ -179,7 +179,7 @@ fun CookingModeScreen(
                             CookingItemRow(
                                 text = "${item.order + 1}. ${item.name}",
                                 checked = checked,
-                                onCheckedChange = { viewModel.onStepCheckedChange(item.id, it) }
+                                onCheckedChange = { viewModel.onStepCheckedChange(item.id, it) },
                             )
                         }
                     }
@@ -204,7 +204,7 @@ fun CookingModeScreen(
                 TextButton(onClick = { viewModel.onDismissExitDialog() }) {
                     Text(stringResource(R.string.confirm_exit_cooking_cancel))
                 }
-            }
+            },
         )
     }
 }
@@ -213,25 +213,27 @@ fun CookingModeScreen(
 private fun CookingItemRow(
     text: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .animateContentSize(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(
             checked = checked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
         )
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                textDecoration = if (checked) TextDecoration.LineThrough else TextDecoration.None,
-                color = if (checked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
-            ),
-            modifier = Modifier.padding(start = 4.dp)
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    textDecoration = if (checked) TextDecoration.LineThrough else TextDecoration.None,
+                    color = if (checked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                ),
+            modifier = Modifier.padding(start = 4.dp),
         )
     }
 }

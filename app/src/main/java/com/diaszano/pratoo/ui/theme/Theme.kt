@@ -8,11 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 
-private val AppShapes = Shapes(
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp)
-)
+private val AppShapes =
+    Shapes(
+        small = RoundedCornerShape(8.dp),
+        medium = RoundedCornerShape(12.dp),
+        large = RoundedCornerShape(16.dp),
+    )
 
 /**
  * Main theme entry point for Pratoo.
@@ -25,13 +26,14 @@ private val AppShapes = Shapes(
 fun PratooTheme(
     appTheme: AppTheme = AppTheme.Pratoo,
     themeMode: AppThemeMode = AppThemeMode.System,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
-    val darkTheme = when (themeMode) {
-        AppThemeMode.Light -> false
-        AppThemeMode.Dark -> true
-        AppThemeMode.System -> isSystemInDarkTheme()
-    }
+    val darkTheme =
+        when (themeMode) {
+            AppThemeMode.Light -> false
+            AppThemeMode.Dark -> true
+            AppThemeMode.System -> isSystemInDarkTheme()
+        }
 
     val colorScheme = getColorScheme(appTheme, darkTheme)
     val appColors = getAppColors(appTheme)
@@ -39,7 +41,7 @@ fun PratooTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        shapes = AppShapes
+        shapes = AppShapes,
     ) {
         CompositionLocalProvider(LocalAppColors provides appColors) {
             content()

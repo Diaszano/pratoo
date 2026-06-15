@@ -10,7 +10,7 @@ package com.diaszano.pratoo.ui.theme
  */
 enum class AppTheme {
     Pratoo,
-    Moonlight
+    Moonlight,
 }
 
 /**
@@ -19,5 +19,5 @@ enum class AppTheme {
 enum class AppThemeMode {
     Light,
     Dark,
-    System
+    System,
 }

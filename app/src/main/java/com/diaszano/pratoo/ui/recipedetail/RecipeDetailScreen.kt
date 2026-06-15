@@ -1,7 +1,7 @@
 package com.diaszano.pratoo.ui.recipedetail
 
-import android.content.Intent
 import android.app.Activity
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,7 +27,6 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
-import com.diaszano.pratoo.ui.theme.LocalAppColors
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -60,6 +57,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.diaszano.pratoo.R
 import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.ui.theme.LocalAppColors
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -68,7 +66,7 @@ fun RecipeDetailScreen(
     onEditRecipe: (Long) -> Unit,
     onStartCooking: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RecipeDetailViewModel = hiltViewModel()
+    viewModel: RecipeDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -97,21 +95,24 @@ fun RecipeDetailScreen(
                         IconButton(onClick = {
                             val text = formatRecipeAsText(recipe, context)
                             val activity = context as? Activity
-                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, text)
-                                setPackage("com.whatsapp")
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            val chooserIntent = Intent.createChooser(sendIntent, null).apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
+                            val sendIntent =
+                                Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, text)
+                                    setPackage("com.whatsapp")
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                            val chooserIntent =
+                                Intent.createChooser(sendIntent, null).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
                             try {
                                 activity?.startActivity(chooserIntent)
                             } catch (_: Exception) {
                                 try {
                                     activity?.startActivity(sendIntent)
-                                } catch (_: Exception) { }
+                                } catch (_: Exception) {
+                                }
                             }
                         }) {
                             Icon(Icons.Default.Share, stringResource(R.string.share))
@@ -119,8 +120,15 @@ fun RecipeDetailScreen(
                         IconButton(onClick = { viewModel.onToggleFavorite() }) {
                             Icon(
                                 Icons.Filled.Star,
-                                contentDescription = if (recipe.isFavorite) stringResource(R.string.unfavorite) else stringResource(R.string.favorite),
-                                tint = if (recipe.isFavorite) appColors.favorite else MaterialTheme.colorScheme.onSurfaceVariant
+                                contentDescription =
+                                    if (recipe.isFavorite) {
+                                        stringResource(
+                                            R.string.unfavorite,
+                                        )
+                                    } else {
+                                        stringResource(R.string.favorite)
+                                    },
+                                tint = if (recipe.isFavorite) appColors.favorite else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
@@ -132,14 +140,14 @@ fun RecipeDetailScreen(
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(Icons.Default.Delete, stringResource(R.string.delete))
                     }
-                }
+                },
             )
         },
         floatingActionButton = {
             uiState.recipe?.let { recipe ->
                 Column(
                     horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Button(onClick = { onStartCooking(recipe.id) }) {
                         Icon(Icons.Default.Restaurant, null, modifier = Modifier.size(18.dp))
@@ -151,43 +159,45 @@ fun RecipeDetailScreen(
                     }
                 }
             }
-        }
+        },
     ) { padding ->
         val recipe = uiState.recipe ?: return@Scaffold
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState()),
         ) {
             if (recipe.imageUri != null) {
                 AsyncImage(
                     model = recipe.imageUri,
                     contentDescription = recipe.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(16f / 9f)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f),
                 )
             }
 
             Column(modifier = Modifier.padding(16.dp)) {
                 // Metadata row
                 Row(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     if (recipe.servings > 0) {
                         Icon(
                             Icons.Default.People,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(end = 4.dp)
+                            modifier = Modifier.padding(end = 4.dp),
                         )
                         Text(
                             "${recipe.servings} ${stringResource(R.string.servings).lowercase()}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.width(16.dp))
                     }
@@ -196,12 +206,12 @@ fun RecipeDetailScreen(
                             Icons.Default.AccessTime,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(end = 4.dp)
+                            modifier = Modifier.padding(end = 4.dp),
                         )
                         Text(
                             "${recipe.prepTimeMinutes} ${stringResource(R.string.minutes_short)}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.width(16.dp))
                     }
@@ -210,12 +220,12 @@ fun RecipeDetailScreen(
                             Icons.Default.AccessTime,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(end = 4.dp)
+                            modifier = Modifier.padding(end = 4.dp),
                         )
                         Text(
                             "${recipe.cookTimeMinutes} ${stringResource(R.string.minutes_short)}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -224,12 +234,12 @@ fun RecipeDetailScreen(
                 if (recipe.tags.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
                     FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         recipe.tags.forEach { tag ->
                             androidx.compose.material3.SuggestionChip(
                                 onClick = {},
-                                label = { Text(tag.name) }
+                                label = { Text(tag.name) },
                             )
                         }
                     }
@@ -240,7 +250,7 @@ fun RecipeDetailScreen(
                     Text(
                         "${stringResource(R.string.source_label)}: ${recipe.sourceUrl}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
 
@@ -258,7 +268,7 @@ fun RecipeDetailScreen(
                         Text(
                             section.name.ifBlank { stringResource(R.string.default_recipe_section) },
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                     }
 
@@ -267,14 +277,14 @@ fun RecipeDetailScreen(
                         Text(
                             stringResource(R.string.ingredients_label),
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(8.dp))
                         section.ingredients.forEach { ingredient ->
                             Text(
                                 "• ${formatIngredient(ingredient.name, ingredient.quantity, ingredient.unit)}",
                                 style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(vertical = 2.dp)
+                                modifier = Modifier.padding(vertical = 2.dp),
                             )
                         }
                     }
@@ -286,14 +296,14 @@ fun RecipeDetailScreen(
                         Text(
                             stringResource(R.string.steps_label),
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                         Spacer(Modifier.height(8.dp))
                         section.steps.sortedBy { it.order }.forEach { step ->
                             Text(
                                 "${step.order + 1}. ${step.text}",
                                 style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(vertical = 4.dp)
+                                modifier = Modifier.padding(vertical = 4.dp),
                             )
                         }
                     }
@@ -307,12 +317,12 @@ fun RecipeDetailScreen(
                     Text(
                         stringResource(R.string.notes_label),
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
                         recipe.notes,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                 }
 
@@ -338,27 +348,34 @@ fun RecipeDetailScreen(
                 TextButton(onClick = { showDeleteDialog = false }) {
                     Text(stringResource(R.string.cancel))
                 }
-            }
+            },
         )
     }
 }
 
-private fun formatIngredient(name: String, quantity: String, unit: String): String {
-    return buildString {
+private fun formatIngredient(
+    name: String,
+    quantity: String,
+    unit: String,
+): String =
+    buildString {
         if (quantity.isNotBlank()) append("$quantity ")
         if (unit.isNotBlank()) append("$unit ")
         append(name)
     }
-}
 
-private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.Recipe, context: android.content.Context): String {
-    return buildString {
+private fun formatRecipeAsText(
+    recipe: com.diaszano.pratoo.recipe.domain.model.Recipe,
+    context: android.content.Context,
+): String =
+    buildString {
         appendLine(recipe.title)
         appendLine()
 
-        val hasMeta = recipe.servings > 0 ||
-            recipe.prepTimeMinutes > 0 ||
-            recipe.cookTimeMinutes > 0
+        val hasMeta =
+            recipe.servings > 0 ||
+                recipe.prepTimeMinutes > 0 ||
+                recipe.cookTimeMinutes > 0
         if (hasMeta) {
             val meta = mutableListOf<String>()
             if (recipe.servings > 0) meta.add("${context.getString(R.string.share_servings)}: ${recipe.servings}")
@@ -399,4 +416,3 @@ private fun formatRecipeAsText(recipe: com.diaszano.pratoo.recipe.domain.model.R
             appendLine(recipe.notes)
         }
     }.trimEnd()
-}

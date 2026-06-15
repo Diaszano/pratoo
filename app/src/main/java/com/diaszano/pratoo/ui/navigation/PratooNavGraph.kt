@@ -6,7 +6,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.diaszano.pratoo.ui.cooking.CookingModeScreen
 import com.diaszano.pratoo.ui.recipedetail.RecipeDetailScreen
 import com.diaszano.pratoo.ui.recipeedit.RecipeEditScreen
@@ -18,13 +17,19 @@ import kotlinx.serialization.Serializable
 data object RecipeListRoute
 
 @Serializable
-data class RecipeDetailRoute(val recipeId: Long)
+data class RecipeDetailRoute(
+    val recipeId: Long,
+)
 
 @Serializable
-data class RecipeEditRoute(val recipeId: Long? = null)
+data class RecipeEditRoute(
+    val recipeId: Long? = null,
+)
 
 @Serializable
-data class CookingModeRoute(val recipeId: Long)
+data class CookingModeRoute(
+    val recipeId: Long,
+)
 
 @Serializable
 data object SettingsRoute
@@ -32,12 +37,12 @@ data object SettingsRoute
 @Composable
 fun PratooNavGraph(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
 ) {
     NavHost(
         navController = navController,
         startDestination = RecipeListRoute,
-        modifier = modifier
+        modifier = modifier,
     ) {
         composable<RecipeListRoute> {
             RecipeListScreen(
@@ -49,7 +54,7 @@ fun PratooNavGraph(
                 },
                 onSettingsClick = {
                     navController.navigate(SettingsRoute)
-                }
+                },
             )
         }
         composable<RecipeDetailRoute> {
@@ -60,23 +65,23 @@ fun PratooNavGraph(
                 },
                 onStartCooking = { recipeId ->
                     navController.navigate(CookingModeRoute(recipeId))
-                }
+                },
             )
         }
         composable<CookingModeRoute> {
             CookingModeScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
         composable<RecipeEditRoute> {
             RecipeEditScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onRecipeSaved = { navController.popBackStack() }
+                onRecipeSaved = { navController.popBackStack() },
             )
         }
         composable<SettingsRoute> {
             SettingsScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
     }

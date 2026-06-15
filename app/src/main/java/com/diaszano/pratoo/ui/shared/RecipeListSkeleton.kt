@@ -34,55 +34,61 @@ fun RecipeListSkeleton(count: Int = 6) {
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmer"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(1200, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+        label = "shimmer",
     )
 
     val shimmerBase = MaterialTheme.colorScheme.surfaceVariant
-    val shimmerBrush = Brush.linearGradient(
-        colors = listOf(
-            shimmerBase.copy(alpha = 0.3f),
-            shimmerBase.copy(alpha = 0.6f),
-            shimmerBase.copy(alpha = 0.3f)
-        ),
-        start = Offset(translateAnim - 200f, translateAnim - 200f),
-        end = Offset(translateAnim, translateAnim)
-    )
+    val shimmerBrush =
+        Brush.linearGradient(
+            colors =
+                listOf(
+                    shimmerBase.copy(alpha = 0.3f),
+                    shimmerBase.copy(alpha = 0.6f),
+                    shimmerBase.copy(alpha = 0.3f),
+                ),
+            start = Offset(translateAnim - 200f, translateAnim - 200f),
+            end = Offset(translateAnim, translateAnim),
+        )
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 160.dp),
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        userScrollEnabled = false
+        userScrollEnabled = false,
     ) {
         items(count) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(4f / 3f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(shimmerBrush)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(4f / 3f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(shimmerBrush),
                 )
                 Box(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .fillMaxWidth(0.7f)
-                        .height(16.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(shimmerBrush)
+                    modifier =
+                        Modifier
+                            .padding(top = 8.dp)
+                            .fillMaxWidth(0.7f)
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(shimmerBrush),
                 )
                 Box(
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .fillMaxWidth(0.5f)
-                        .height(12.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(shimmerBrush)
+                    modifier =
+                        Modifier
+                            .padding(top = 4.dp)
+                            .fillMaxWidth(0.5f)
+                            .height(12.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(shimmerBrush),
                 )
             }
         }

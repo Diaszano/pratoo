@@ -8,7 +8,7 @@ data class CookingModeUiState(
     val completedStepIds: Set<String> = emptySet(),
     val isLoading: Boolean = true,
     val showExitDialog: Boolean = false,
-    val isFinished: Boolean = false
+    val isFinished: Boolean = false,
 )
 
 data class CookingSectionUiState(
@@ -16,7 +16,7 @@ data class CookingSectionUiState(
     val name: String,
     val showHeader: Boolean,
     val ingredients: List<CookingItemUiState>,
-    val steps: List<CookingItemUiState>
+    val steps: List<CookingItemUiState>,
 )
 
 data class CookingItemUiState(
@@ -24,12 +24,13 @@ data class CookingItemUiState(
     val name: String = "",
     val quantity: String = "",
     val unit: String = "",
-    val order: Int = 0
+    val order: Int = 0,
 ) {
     val displayText: String
-        get() = buildString {
-            if (quantity.isNotBlank()) append("$quantity ")
-            if (unit.isNotBlank()) append("$unit ")
-            append(name)
-        }
+        get() =
+            buildString {
+                if (quantity.isNotBlank()) append("$quantity ")
+                if (unit.isNotBlank()) append("$unit ")
+                append(name)
+            }
 }
