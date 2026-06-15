@@ -28,6 +28,60 @@ class JsonRecipeBackupCodec
                 ignoreUnknownKeys = true
             }
 
+        fun encodeWithMetadata(
+            recipes: List<Recipe>,
+            appVersionName: String?,
+            appVersionCode: Int?,
+            deviceName: String?,
+        ): String {
+            val data =
+                BackupData(
+                    version = BACKUP_VERSION,
+                    exportedAt = System.currentTimeMillis(),
+                    recipes =
+                        recipes.map { recipe ->
+                            BackupRecipeDto(
+                                title = recipe.title,
+                                notes = recipe.notes,
+                                imageUri = recipe.imageUri,
+                                servings = recipe.servings,
+                                prepTimeMinutes = recipe.prepTimeMinutes,
+                                cookTimeMinutes = recipe.cookTimeMinutes,
+                                sourceUrl = recipe.sourceUrl,
+                                isFavorite = recipe.isFavorite,
+                                createdAt = recipe.createdAt,
+                                updatedAt = recipe.updatedAt,
+                                sections =
+                                    recipe.sections.map { section ->
+                                        BackupRecipeSectionDto(
+                                            name = section.name,
+                                            position = section.position,
+                                            ingredients =
+                                                section.ingredients.map {
+                                                    BackupIngredientDto(
+                                                        it.name,
+                                                        it.quantity,
+                                                        it.unit,
+                                                        it.position,
+                                                    )
+                                                },
+                                            steps =
+                                                section.steps.map {
+                                                    BackupStepDto(it.text, it.order)
+                                                },
+                                        )
+                                    },
+                                tags = recipe.tags.map { BackupTagDto(it.name) },
+                            )
+                        },
+                    recipeCount = recipes.size,
+                    appVersionName = appVersionName,
+                    appVersionCode = appVersionCode,
+                    deviceName = deviceName,
+                )
+            return json.encodeToString(BackupData.serializer(), data)
+        }
+
         override fun encode(recipes: List<Recipe>): String {
             val data =
                 BackupData(
@@ -158,6 +212,10 @@ class JsonRecipeBackupCodec
             val version: Int = 2,
             val exportedAt: Long = System.currentTimeMillis(),
             val recipes: List<BackupRecipeDto> = emptyList(),
+            val recipeCount: Int = 0,
+            val appVersionName: String? = null,
+            val appVersionCode: Int? = null,
+            val deviceName: String? = null,
         )
 
         @Serializable

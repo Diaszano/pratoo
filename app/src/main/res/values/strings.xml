@@ -113,4 +113,28 @@
     <string name="recipe_finished_message">Receita finalizada!</string>
     <string name="no_ingredients_in_section">Nenhum ingrediente nesta parte.</string>
     <string name="no_steps_in_section">Nenhum passo nesta parte.</string>
+
+    <!-- Google Drive Backup -->
+    <string name="backup_settings_title">Backup Google Drive</string>
+    <string name="google_drive_backup">Backup Google Drive</string>
+    <string name="backup_permission_explanation">Conecte sua conta Google para ativar backup automático na nuvem.</string>
+    <string name="connect_google_account">Conectar conta Google</string>
+    <string name="disconnect_google_account">Desconectar conta Google</string>
+    <string name="enable_automatic_backup">Backup automático</string>
+    <string name="backup_enabled_description">Backups são feitos automaticamente a cada 24 horas.</string>
+    <string name="backup_now">Fazer backup agora</string>
+    <string name="backup_in_progress">Fazendo backup…</string>
+    <string name="restore_from_google_drive">Restaurar do Google Drive</string>
+    <string name="automatic_backup_notice">Backup automático requer conexão com internet.</string>
+    <string name="backup_never_done">Nenhum backup feito ainda.</string>
+    <string name="backup_failed">Falha no backup.</string>
+    <string name="backup_requires_permission">Permissão necessária para fazer backup.</string>
+    <string name="last_backup">Último backup: %1$s</string>
+    <string name="backup_file_unknown_date">Data desconhecida</string>
+    <string name="backup_file_recipe_count">%1$d receitas</string>
+    <string name="restore_backup_title">Restaurar backup</string>
+    <string name="restore_backup_message">Tem certeza que deseja restaurar este backup? Os dados atuais serão substituídos.</string>
+    <string name="restore_backup_confirm">Restaurar</string>
+    <string name="restore_backup_cancel">Cancelar</string>
+    <string name="no_drive_backups_found">Nenhum backup encontrado no Google Drive.</string>
 </resources>
