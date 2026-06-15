@@ -3,7 +3,6 @@ package com.diaszano.pratoo.ui.settings
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
-import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diaszano.pratoo.R
