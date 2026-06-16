@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.diaszano.pratoo.R
+import com.diaszano.pratoo.backup.application.BackupNowUseCase
+import com.diaszano.pratoo.backup.application.ObserveBackupSettingsUseCase
 import com.diaszano.pratoo.core.error.ValidationException
 import com.diaszano.pratoo.recipe.application.usecase.GetRecipeUseCase
 import com.diaszano.pratoo.recipe.application.usecase.ObserveMeasurementUnitsUseCase
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -98,8 +101,10 @@ class RecipeEditViewModel
         savedStateHandle: SavedStateHandle,
         observeTags: ObserveTagsUseCase,
         observeMeasurementUnits: ObserveMeasurementUnitsUseCase,
+        private val observeBackupSettings: ObserveBackupSettingsUseCase,
         private val getRecipe: GetRecipeUseCase,
         private val saveRecipe: SaveRecipeUseCase,
+        private val backupNow: BackupNowUseCase,
         private val repository: RecipeRepository,
         @param:ApplicationContext private val context: Context,
     ) : ViewModel() {
@@ -566,7 +571,13 @@ class RecipeEditViewModel
 
             viewModelScope.launch {
                 try {
+                    val isNewRecipe = recipeId == null
                     saveRecipe(recipe)
+                    if (isNewRecipe) {
+                        runCatching {
+                            triggerDriveBackupIfConfigured()
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             isSaving = false,
@@ -722,4 +733,10 @@ class RecipeEditViewModel
                 ingredientNameErrors = emptyMap(),
                 stepTextErrors = emptyMap(),
             )
+
+        private suspend fun triggerDriveBackupIfConfigured() {
+            val backupSettings = observeBackupSettings().first()
+            if (backupSettings.selectedGoogleAccountEmail.isNullOrBlank()) return
+            backupNow()
+        }
     }
