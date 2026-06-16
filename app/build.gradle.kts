@@ -11,7 +11,7 @@ plugins {
 
 android {
     namespace = "com.diaszano.pratoo"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.diaszano.pratoo"
