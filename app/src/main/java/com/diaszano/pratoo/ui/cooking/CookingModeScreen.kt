@@ -52,6 +52,7 @@ import com.diaszano.pratoo.ui.shared.LoadingState
 import com.diaszano.pratoo.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("LocalContextGetResourceValueCall")
 @Composable
 fun CookingModeScreen(
     onNavigateBack: () -> Unit,
