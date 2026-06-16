@@ -21,7 +21,7 @@ module.exports = {
       ],
     ],
     "scope-case": [2, "always", "lowercase"],
-    "subject-case": [2, "always", "lowercase"],
+    "subject-case": [0],
     "subject-empty": [2, "never"],
     "type-empty": [2, "never"],
   },
