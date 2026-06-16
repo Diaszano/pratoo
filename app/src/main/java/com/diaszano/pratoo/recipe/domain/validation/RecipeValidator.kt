@@ -1,17 +1,13 @@
 package com.diaszano.pratoo.recipe.domain.validation
 
-import com.diaszano.pratoo.R
 import com.diaszano.pratoo.recipe.domain.model.Ingredient
 import com.diaszano.pratoo.recipe.domain.model.Recipe
+import com.diaszano.pratoo.recipe.domain.model.RecipeSection
 import com.diaszano.pratoo.recipe.domain.model.RecipeStep
 import com.diaszano.pratoo.recipe.domain.model.Tag
+import java.net.URI
 
-/**
- * Domain-level validation errors for [Recipe] data.
- *
- * Each variant maps to a user-facing message via [toLocalizedMessageRes].
- * Internal names are in English; the resolved message is in the device locale.
- */
+/** Domain-level validation errors for [Recipe] data. */
 sealed interface RecipeValidationError {
     data object EmptyTitle : RecipeValidationError
 
@@ -21,17 +17,27 @@ sealed interface RecipeValidationError {
 
     data object NegativeCookTime : RecipeValidationError
 
-    data object EmptyIngredientName : RecipeValidationError
+    data object InvalidSourceUrl : RecipeValidationError
 
-    /** Returns the `@StringRes` identifier for the localized message. */
-    fun toLocalizedMessageRes(): Int =
-        when (this) {
-            is EmptyTitle -> R.string.validation_empty_title
-            is InvalidServings -> R.string.validation_invalid_servings
-            is NegativePrepTime -> R.string.validation_negative_prep_time
-            is NegativeCookTime -> R.string.validation_negative_cook_time
-            is EmptyIngredientName -> R.string.validation_empty_ingredient_name
-        }
+    data object EmptyContent : RecipeValidationError
+
+    data class EmptySectionName(
+        val sectionIndex: Int,
+    ) : RecipeValidationError
+
+    data class EmptySectionContent(
+        val sectionIndex: Int,
+    ) : RecipeValidationError
+
+    data class EmptyIngredientName(
+        val sectionIndex: Int,
+        val ingredientIndex: Int,
+    ) : RecipeValidationError
+
+    data class EmptyStepText(
+        val sectionIndex: Int,
+        val stepIndex: Int,
+    ) : RecipeValidationError
 }
 
 object RecipeValidator {
@@ -50,12 +56,46 @@ object RecipeValidator {
         if (recipe.cookTimeMinutes < 0) {
             errors.add(RecipeValidationError.NegativeCookTime)
         }
-        val hasBlankIngredient =
-            recipe.sections.any { section ->
-                section.ingredients.any { it.name.isBlank() }
+
+        val sourceUrl = recipe.sourceUrl?.trim().orEmpty()
+        if (sourceUrl.isNotBlank() && !sourceUrl.isValidWebUrl()) {
+            errors.add(RecipeValidationError.InvalidSourceUrl)
+        }
+
+        val sections = recipe.sections.ifEmpty { listOf(RecipeSection()) }
+        val hasMultipleSections = sections.size > 1
+        var hasAnyContent = false
+
+        sections.forEachIndexed { sectionIndex, section ->
+            val hasNamedSection = section.name.isNotBlank()
+            val validIngredientCount = section.ingredients.count { it.name.isNotBlank() }
+            val validStepCount = section.steps.count { it.text.isNotBlank() }
+            val sectionHasContent = validIngredientCount > 0 || validStepCount > 0
+            hasAnyContent = hasAnyContent || sectionHasContent
+
+            if (hasMultipleSections && section.name.isBlank()) {
+                errors.add(RecipeValidationError.EmptySectionName(sectionIndex))
             }
-        if (hasBlankIngredient) {
-            errors.add(RecipeValidationError.EmptyIngredientName)
+
+            if ((hasMultipleSections || hasNamedSection) && !sectionHasContent) {
+                errors.add(RecipeValidationError.EmptySectionContent(sectionIndex))
+            }
+
+            section.ingredients.forEachIndexed { ingredientIndex, ingredient ->
+                if (ingredient.name.isBlank() && ingredient.hasAnyInput()) {
+                    errors.add(RecipeValidationError.EmptyIngredientName(sectionIndex, ingredientIndex))
+                }
+            }
+
+            section.steps.forEachIndexed { stepIndex, step ->
+                if (step.text.isBlank() && section.steps.size > 1) {
+                    errors.add(RecipeValidationError.EmptyStepText(sectionIndex, stepIndex))
+                }
+            }
+        }
+
+        if (!hasAnyContent) {
+            errors.add(RecipeValidationError.EmptyContent)
         }
 
         return errors
@@ -90,4 +130,13 @@ object RecipeValidator {
             .map { it.copy(name = it.name.trim()) }
             .filter { it.name.isNotBlank() }
             .distinctBy { it.name.lowercase() }
+
+    private fun Ingredient.hasAnyInput(): Boolean = name.isNotBlank() || quantity.isNotBlank() || unit.isNotBlank()
+
+    private fun String.isValidWebUrl(): Boolean =
+        runCatching {
+            val uri = URI(this)
+            val scheme = uri.scheme?.lowercase()
+            scheme in setOf("http", "https") && !uri.host.isNullOrBlank()
+        }.getOrDefault(false)
 }

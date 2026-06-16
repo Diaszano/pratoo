@@ -35,7 +35,7 @@ import com.diaszano.pratoo.recipe.adapter.out.persistence.entity.TagEntity
         MeasurementCategoryEntity::class,
         MeasurementUnitEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

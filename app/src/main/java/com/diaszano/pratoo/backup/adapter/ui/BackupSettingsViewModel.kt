@@ -1,8 +1,10 @@
 package com.diaszano.pratoo.backup.adapter.ui
 
+import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.diaszano.pratoo.R
 import com.diaszano.pratoo.backup.adapter.out.cloud.GoogleDriveAuthorizationManager
 import com.diaszano.pratoo.backup.adapter.out.worker.BackupWorkerScheduler
 import com.diaszano.pratoo.backup.application.BackupNowUseCase
@@ -14,6 +16,7 @@ import com.diaszano.pratoo.backup.application.RestoreDriveBackupUseCase
 import com.diaszano.pratoo.backup.domain.model.BackupStatus
 import com.diaszano.pratoo.backup.domain.model.CloudBackupFile
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,6 +53,7 @@ class BackupSettingsViewModel
         private val restoreDriveBackup: RestoreDriveBackupUseCase,
         private val authorizationManager: GoogleDriveAuthorizationManager,
         private val workerScheduler: BackupWorkerScheduler,
+        @param:ApplicationContext private val context: Context,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(BackupSettingsUiState())
         val uiState: StateFlow<BackupSettingsUiState> = _uiState.asStateFlow()
@@ -88,10 +92,10 @@ class BackupSettingsViewModel
                             )
                         }
                     },
-                    onError = { error ->
+                    onError = {
                         _uiState.update {
                             it.copy(
-                                message = "Erro ao conectar: ${error.message}",
+                                message = context.getString(R.string.backup_connect_error),
                             )
                         }
                     },
@@ -135,14 +139,14 @@ class BackupSettingsViewModel
                         it.copy(
                             isBackingUp = false,
                             lastBackupStatus = BackupStatus.Success,
-                            message = "Backup concluído com sucesso.",
+                            message = context.getString(R.string.backup_now_success),
                         )
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     _uiState.update {
                         it.copy(
                             isBackingUp = false,
-                            message = "Erro ao fazer backup: ${e.message}",
+                            message = context.getString(R.string.backup_now_error),
                         )
                     }
                 }
@@ -166,11 +170,11 @@ class BackupSettingsViewModel
                             isLoadingBackups = false,
                         )
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     _uiState.update {
                         it.copy(
                             isLoadingBackups = false,
-                            message = "Erro ao listar backups: ${e.message}",
+                            message = context.getString(R.string.backup_list_error),
                         )
                     }
                 }
@@ -210,16 +214,16 @@ class BackupSettingsViewModel
                     _uiState.update {
                         it.copy(
                             isRestoring = false,
-                            message = "Backup restaurado com sucesso.",
+                            message = context.getString(R.string.restore_backup_success),
                             isShowingBackupList = false,
                             availableBackups = emptyList(),
                         )
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     _uiState.update {
                         it.copy(
                             isRestoring = false,
-                            message = "Erro ao restaurar: ${e.message}",
+                            message = context.getString(R.string.restore_backup_error),
                         )
                     }
                 }

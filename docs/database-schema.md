@@ -10,15 +10,15 @@
 | Property | Value |
 |---|---|
 | File | `pratoo.db` (SQLite via Room) |
-| Current version | `1` |
+| Current version | `2` |
 | Schema exported | `app/schemas/` (KSP `room.schemaLocation`) |
-| Migrations | None (baseline schema for v0.1.0) |
+| Migrations | `1 → 2` adds recipe trash support via `recipes.deleted_at` |
 | Destructive fallback | Disabled (`false`) |
 | Auto-seed | `MeasurementCategoryEntity` + `MeasurementUnitEntity` (via `onCreate` / `onOpen` callback) |
 
 > **Note:** Previous pre-release migrations (v1→v2→v3→v4) were removed intentionally
-> before the first public release (v0.1.0). The current schema version 1 is the
-> consolidated baseline. Future schema changes after v0.1.0 must use proper migrations
+> before the first public release (v0.1.0). Schema version 1 is the consolidated
+> baseline. Future schema changes after v0.1.0 must use proper migrations
 > and must not reset the database.
 
 ---
@@ -40,6 +40,7 @@
 │ is_favorite   INTEGER (default 0)    │
 │ created_at    INTEGER (epoch ms)     │
 │ updated_at    INTEGER (epoch ms)     │
+│ deleted_at    INTEGER (epoch ms, null)│
 └──────────────┬───────────────────────┘
                │ 1
                │
@@ -109,6 +110,14 @@
 | `is_favorite` | `INTEGER` | mapped as 0/1 | `false` |
 | `created_at` | `INTEGER` | epoch millis | `System.currentTimeMillis()` |
 | `updated_at` | `INTEGER` | epoch millis | `System.currentTimeMillis()` |
+| `deleted_at` | `INTEGER` | nullable epoch millis; non-null means the recipe is in trash | `null` |
+
+**Indices:** `deleted_at`.
+
+**Notes:**
+- Active recipe queries filter `deleted_at IS NULL`.
+- Soft-deleted recipes are listed in the trash while `deleted_at IS NOT NULL`.
+- Trash cleanup permanently deletes recipes after 30 days or immediately after explicit confirmation in the trash UI.
 
 ### 2. `ingredients`
 

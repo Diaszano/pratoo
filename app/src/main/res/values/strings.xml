@@ -6,13 +6,19 @@
     <string name="search">Buscar</string>
     <string name="all">Todas</string>
     <string name="no_recipes_yet">Nenhuma receita ainda.\nToque no + para criar a primeira!</string>
+    <string name="empty_recipes_title">Sua cozinha está pronta</string>
+    <string name="empty_recipes_message">Adicione sua primeira receita para encontrar tudo com facilidade depois.</string>
     <string name="no_search_results">Nenhum resultado encontrado.</string>
+    <string name="empty_search_title">Nada por aqui</string>
+    <string name="empty_search_message">Tente buscar por outro nome ou remover os filtros ativos.</string>
     <string name="delete">Excluir</string>
-    <string name="delete_recipe_title">Excluir receita</string>
-    <string name="delete_recipe_message">Tem certeza que deseja excluir esta receita? Esta ação não pode ser desfeita.</string>
+    <string name="delete_recipe_title">Mover para a lixeira</string>
+    <string name="delete_recipe_message">A receita ficará na lixeira por 30 dias antes de ser removida automaticamente.</string>
+    <string name="move_to_trash">Mover para lixeira</string>
     <string name="cancel">Cancelar</string>
     <string name="confirm">Confirmar</string>
     <string name="edit">Editar</string>
+    <string name="save">Salvar</string>
     <string name="servings">Porções</string>
     <string name="prep_time">Preparo</string>
     <string name="cook_time">Cozimento</string>
@@ -51,10 +57,19 @@
     <string name="unit_imperial">Imperial</string>
     <string name="photo">Foto da receita</string>
     <string name="add_photo">Adicionar foto</string>
+    <string name="change_photo">Alterar foto</string>
+    <string name="recipe_photo_placeholder">Foto da receita não adicionada</string>
     <string name="remove">Remover</string>
     <string name="title_required">Título *</string>
-    <string name="recipe_deleted">Receita excluída</string>
+    <string name="recipe_deleted">Receita movida para a lixeira</string>
     <string name="save_recipe">Salvar receita</string>
+    <string name="saving_recipe">Salvando receita…</string>
+    <string name="recipe_save_error">Não foi possível salvar a receita. Tente novamente.</string>
+    <string name="loading_recipe">Carregando receita…</string>
+    <string name="recipe_load_error">Não foi possível carregar a receita.</string>
+    <string name="recipe_not_found">Receita não encontrada.</string>
+    <string name="recipe_basic_info">Informações principais</string>
+    <string name="recipe_content">Conteúdo da receita</string>
     <string name="ingredients_label">Ingredientes</string>
     <string name="steps_label">Modo de preparo</string>
     <string name="tags_label">Tags</string>
@@ -69,13 +84,46 @@
     <string name="move_up">Mover para cima</string>
     <string name="move_down">Mover para baixo</string>
     <string name="share">Compartilhar</string>
+    <string name="clear_search">Limpar busca</string>
+    <string name="recipe_card_content_description">Abrir receita %1$s</string>
+    <string name="favorite_recipe_content_description">Receita favorita</string>
+    <string name="add_to_favorites">Adicionar aos favoritos</string>
+    <string name="remove_from_favorites">Remover dos favoritos</string>
+    <string name="selected_filter">Filtro selecionado: %1$s</string>
+    <string name="trash">Lixeira</string>
+    <string name="trash_empty_title">Lixeira vazia</string>
+    <string name="trash_empty_message">Receitas excluídas ficam aqui por 30 dias.</string>
+    <string name="trash_recipe_auto_delete">Será removida automaticamente após 30 dias na lixeira.</string>
+    <string name="restore_recipe">Restaurar receita</string>
+    <string name="delete_recipe_permanently">Excluir receita definitivamente</string>
+    <string name="delete_recipe_permanently_title">Excluir definitivamente?</string>
+    <string name="delete_recipe_permanently_message">A receita “%1$s” será removida de vez. Esta ação não pode ser desfeita.</string>
+    <string name="delete_permanently">Excluir definitivamente</string>
+    <string name="delete_tag">Excluir tag</string>
+    <string name="delete_tag_title">Excluir tag?</string>
+    <string name="delete_tag_message">A tag “%1$s” será removida das receitas e da lista de tags.</string>
 
     <!-- Validation -->
-    <string name="validation_empty_title">Título é obrigatório</string>
-    <string name="validation_invalid_servings">Porções devem ser pelo menos 1</string>
-    <string name="validation_negative_prep_time">Tempo de preparo não pode ser negativo</string>
-    <string name="validation_negative_cook_time">Tempo de cozinha não pode ser negativo</string>
-    <string name="validation_empty_ingredient_name">Ingrediente com nome vazio não é permitido</string>
+    <string name="recipe_title_required">Informe o nome da receita.</string>
+    <string name="recipe_servings_invalid">A quantidade de porções deve ser maior que zero.</string>
+    <string name="recipe_prep_time_invalid">O tempo de preparo não pode ser negativo.</string>
+    <string name="recipe_cook_time_invalid">O tempo de cozimento não pode ser negativo.</string>
+    <string name="recipe_total_time_invalid">O tempo total não pode ser negativo.</string>
+    <string name="recipe_source_url_invalid">Informe um link válido.</string>
+    <string name="recipe_content_required">Adicione pelo menos um ingrediente ou passo.</string>
+    <string name="recipe_ingredient_required">Informe o nome do ingrediente.</string>
+    <string name="recipe_step_required">Informe a descrição do passo.</string>
+    <string name="recipe_section_name_required">Informe o nome desta parte da receita.</string>
+    <string name="recipe_section_empty">Adicione pelo menos um ingrediente ou passo nesta parte.</string>
+    <string name="recipe_unsaved_changes_title">Descartar alterações?</string>
+    <string name="recipe_unsaved_changes_message">As alterações feitas nesta receita serão perdidas.</string>
+    <string name="discard_changes">Descartar</string>
+    <string name="keep_editing">Continuar editando</string>
+    <string name="validation_empty_title">Informe o nome da receita.</string>
+    <string name="validation_invalid_servings">A quantidade de porções deve ser maior que zero.</string>
+    <string name="validation_negative_prep_time">O tempo de preparo não pode ser negativo.</string>
+    <string name="validation_negative_cook_time">O tempo de cozimento não pode ser negativo.</string>
+    <string name="validation_empty_ingredient_name">Informe o nome do ingrediente.</string>
 
     <!-- Share / export as text -->
     <string name="untitled_recipe">Receita sem título</string>
@@ -111,6 +159,9 @@
     <string name="confirm_exit_cooking_confirm">Sair</string>
     <string name="confirm_exit_cooking_cancel">Continuar</string>
     <string name="recipe_finished_message">Receita finalizada!</string>
+    <string name="cooking_loading">Preparando modo de preparo…</string>
+    <string name="cooking_item_checked">Concluído: %1$s</string>
+    <string name="cooking_item_unchecked">Pendente: %1$s</string>
     <string name="no_ingredients_in_section">Nenhum ingrediente nesta parte.</string>
     <string name="no_steps_in_section">Nenhum passo nesta parte.</string>
 
@@ -124,6 +175,7 @@
     <string name="backup_enabled_description">Backups são feitos automaticamente a cada 24 horas.</string>
     <string name="backup_now">Fazer backup agora</string>
     <string name="backup_in_progress">Fazendo backup…</string>
+    <string name="loading_backups">Buscando backups…</string>
     <string name="restore_from_google_drive">Restaurar do Google Drive</string>
     <string name="automatic_backup_notice">Backup automático requer conexão com internet.</string>
     <string name="backup_never_done">Nenhum backup feito ainda.</string>
@@ -137,4 +189,13 @@
     <string name="restore_backup_confirm">Restaurar</string>
     <string name="restore_backup_cancel">Cancelar</string>
     <string name="no_drive_backups_found">Nenhum backup encontrado no Google Drive.</string>
+    <string name="backup_connect_error">Não foi possível conectar sua conta Google. Tente novamente.</string>
+    <string name="backup_now_success">Backup concluído com sucesso.</string>
+    <string name="backup_now_error">Não foi possível fazer o backup. Verifique sua conexão e tente novamente.</string>
+    <string name="backup_list_error">Não foi possível buscar os backups. Tente novamente.</string>
+    <string name="restore_backup_success">Backup restaurado com sucesso.</string>
+    <string name="restore_backup_error">Não foi possível restaurar o backup. Tente novamente.</string>
+    <string name="backup_file_version">Versão %1$s</string>
+    <string name="export_error_message">Não foi possível exportar suas receitas. Tente novamente.</string>
+    <string name="import_error_message">Não foi possível importar este arquivo. Verifique se ele é um backup válido.</string>
 </resources>

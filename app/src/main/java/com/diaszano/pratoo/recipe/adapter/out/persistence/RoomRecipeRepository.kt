@@ -40,6 +40,9 @@ class RoomRecipeRepository
         override fun observeFavoriteRecipes(): Flow<List<RecipeListItem>> =
             recipeDao.observeFavoriteRecipes().map { list -> list.map { it.toDomain() } }
 
+        override fun observeDeletedRecipes(): Flow<List<RecipeListItem>> =
+            recipeDao.observeDeletedRecipes().map { list -> list.map { it.toDomain() } }
+
         override fun searchRecipes(
             query: String?,
             tagId: Long?,
@@ -92,7 +95,19 @@ class RoomRecipeRepository
             }
 
         override suspend fun deleteRecipe(id: Long) {
+            recipeDao.softDeleteById(id, System.currentTimeMillis())
+        }
+
+        override suspend fun restoreDeletedRecipe(id: Long) {
+            recipeDao.restoreById(id, System.currentTimeMillis())
+        }
+
+        override suspend fun deleteRecipePermanently(id: Long) {
             recipeDao.deleteById(id)
+        }
+
+        override suspend fun deleteDeletedRecipesOlderThan(cutoffMillis: Long) {
+            recipeDao.deleteDeletedBefore(cutoffMillis)
         }
 
         override suspend fun deleteAllRecipes() {

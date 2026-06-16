@@ -12,13 +12,14 @@
 - **Criar e editar receitas** com foto, ingredientes, modo de preparo, anotações e URL da fonte
 - **Favoritos** — marque suas receitas preferidas com estrela
 - **Busca e filtros** — busque por título ou ingrediente, filtre por tags
-- **Tags** — crie e gerencie tags para organizar suas receitas
-- **Unidades de medida** — 23 unidades pré-cadastradas (g, kg, xícara, colher de sopa, etc.)
+- **Tags** — crie, selecione e remova tags para organizar suas receitas
+- **Unidades de medida** — 37 unidades pré-cadastradas (g, kg, xícara, colher de sopa, etc.)
 - **Reordenação de passos** — mova os passos do modo de preparo para cima e para baixo
 - **Modo preparo** — modo passo-a-passo com checklist de ingredientes
 - **Compartilhar** — envie receitas formatadas direto para WhatsApp ou outros apps
+- **Lixeira** — receitas excluídas podem ser restauradas ou removidas definitivamente; itens expiram após 30 dias
 - **Backup manual** — exporte e importe todas as receitas em JSON
-- **Backup Google Drive** — backup automático diário na nuvem com criptografia (escopo `drive.appdata`) 🔒
+- **Backup Google Drive** — backup automático diário e backup ao criar novas receitas, usando o escopo `drive.appdata` 🔒
 - **Restauração seletiva** — escolha qual backup do Drive restaurar
 - **4 temas** — Sistema, Claro, Escuro e Moonlight (paleta azul-escura inspirada em Tokyo Night)
 
@@ -83,20 +84,29 @@ app/src/main/java/com/diaszano/pratoo/
 │   ├── application/   # Casos de uso
 │   └── adapter/       # Cloud storage, worker, settings, UI
 ├── data/
-│   ├── local/         # DAOs, entidades, relações (Room)
-│   ├── repository/    # Repository pattern
 │   └── settings/      # Preferências do app
 ├── di/                # Módulos Hilt
+├── recipe/
+│   ├── adapter/       # Persistência Room e codec de backup
+│   ├── application/   # Casos de uso de receitas
+│   ├── database/      # AppDatabase Room
+│   └── domain/        # Modelos, portas e validação
 ├── ui/
+│   ├── cooking/       # Modo preparo
+│   ├── navigation/    # Rotas tipadas
 │   ├── recipeedit/    # Tela de criação/edição
 │   ├── recipedetail/  # Tela de detalhe
 │   ├── recipelist/    # Tela inicial (grid)
 │   ├── settings/      # Configurações
-│   ├── cooking/       # Modo preparo
 │   ├── shared/        # Componentes reutilizáveis
+│   ├── trash/         # Lixeira de receitas
 │   └── theme/         # Temas e cores
-└── navigation/        # Rotas tipadas
 ```
+
+## Banco de dados
+
+O app usa Room com migrations explícitas e exportação de schemas em `app/schemas/`.
+Consulte [docs/database-schema.md](docs/database-schema.md) para a documentação do schema atual.
 
 ## Releases
 

@@ -3,6 +3,7 @@ package com.diaszano.pratoo.di
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.diaszano.pratoo.recipe.adapter.out.backup.JsonRecipeBackupCodec
 import com.diaszano.pratoo.recipe.adapter.out.persistence.RoomRecipeRepository
@@ -43,9 +44,18 @@ object DatabaseModule {
     ): AppDatabase =
         Room
             .databaseBuilder(context, AppDatabase::class.java, "pratoo.db")
+            .addMigrations(MIGRATION_1_2)
             .addCallback(SeedCallback())
             .fallbackToDestructiveMigration(false)
             .build()
+
+    private val MIGRATION_1_2 =
+        object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE recipes ADD COLUMN deleted_at INTEGER")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recipes_deleted_at ON recipes(deleted_at)")
+            }
+        }
 
     /**
      * Database callback that seeds reference data (measurement categories and units)
@@ -59,6 +69,7 @@ object DatabaseModule {
             CoroutineScope(Dispatchers.IO).launch {
                 seedCategories(db)
                 seedUnits(db)
+                updateCategoryDisplayNames(db)
             }
         }
 
@@ -78,6 +89,7 @@ object DatabaseModule {
                     seedCategories(db)
                     seedUnits(db)
                 }
+                updateCategoryDisplayNames(db)
             }
         }
 
@@ -86,7 +98,7 @@ object DatabaseModule {
             categories.forEach { category ->
                 db.execSQL(
                     "INSERT OR IGNORE INTO measurement_categories (code, display_name, sort_order) VALUES (?, ?, ?)",
-                    arrayOf(category.code, category.displayName, category.sortOrder),
+                    arrayOf<Any>(category.code, category.displayName, category.sortOrder),
                 )
             }
         }
@@ -104,18 +116,27 @@ object DatabaseModule {
                 )
             }
         }
+
+        private fun updateCategoryDisplayNames(db: SupportSQLiteDatabase) {
+            defaultCategories().forEach { category ->
+                db.execSQL(
+                    "UPDATE measurement_categories SET display_name = ? WHERE code = ?",
+                    arrayOf(category.displayName, category.code),
+                )
+            }
+        }
     }
 
     internal fun defaultCategories(): List<MeasurementCategoryEntity> =
         listOf(
-            MeasurementCategoryEntity(code = "weight", displayName = "Weight", sortOrder = 10),
+            MeasurementCategoryEntity(code = "weight", displayName = "Peso", sortOrder = 10),
             MeasurementCategoryEntity(code = "volume", displayName = "Volume", sortOrder = 20),
-            MeasurementCategoryEntity(code = "kitchen", displayName = "Kitchen measurements", sortOrder = 30),
-            MeasurementCategoryEntity(code = "count", displayName = "Quantity", sortOrder = 40),
-            MeasurementCategoryEntity(code = "portion", displayName = "Portions and cuts", sortOrder = 50),
-            MeasurementCategoryEntity(code = "ingredient_unit", displayName = "Ingredient units", sortOrder = 60),
-            MeasurementCategoryEntity(code = "package", displayName = "Packages", sortOrder = 70),
-            MeasurementCategoryEntity(code = "other", displayName = "Other", sortOrder = 80),
+            MeasurementCategoryEntity(code = "kitchen", displayName = "Medidas culinárias", sortOrder = 30),
+            MeasurementCategoryEntity(code = "count", displayName = "Quantidade", sortOrder = 40),
+            MeasurementCategoryEntity(code = "portion", displayName = "Porções e cortes", sortOrder = 50),
+            MeasurementCategoryEntity(code = "ingredient_unit", displayName = "Unidades de ingrediente", sortOrder = 60),
+            MeasurementCategoryEntity(code = "package", displayName = "Embalagens", sortOrder = 70),
+            MeasurementCategoryEntity(code = "other", displayName = "Outros", sortOrder = 80),
         )
 
     /**

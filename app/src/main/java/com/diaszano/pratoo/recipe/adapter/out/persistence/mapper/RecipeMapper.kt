@@ -37,6 +37,7 @@ object RecipeMapper {
             isFavorite = recipe.isFavorite,
             createdAt = recipe.createdAt,
             updatedAt = recipe.updatedAt,
+            deletedAt = recipe.deletedAt,
             sections = sections.map { it.toDomain() },
             tags = tags.map { it.toDomain() },
         )
@@ -57,6 +58,7 @@ object RecipeMapper {
             imageUri = imageUri,
             isFavorite = isFavorite,
             updatedAt = updatedAt,
+            deletedAt = deletedAt,
         )
 
     fun IngredientEntity.toDomain() =
@@ -126,6 +128,7 @@ object RecipeMapper {
             isFavorite = isFavorite,
             createdAt = createdAt,
             updatedAt = updatedAt,
+            deletedAt = deletedAt,
         )
 
     fun RecipeSection.toEntity(recipeId: Long) =

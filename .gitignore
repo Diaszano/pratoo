@@ -65,9 +65,6 @@ firebase-crashreporter-*.json
 # ── Kotlin ─────────────────────────────────────────────────────────
 .kotlin/
 
-# ── Room schema exports ────────────────────────────────────────────
-app/schemas/
-
 # ── Proguard ───────────────────────────────────────────────────────
 app/proguard/
 
