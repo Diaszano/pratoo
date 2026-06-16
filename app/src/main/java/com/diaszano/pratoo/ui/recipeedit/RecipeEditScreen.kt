@@ -72,6 +72,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.diaszano.pratoo.R
 import com.diaszano.pratoo.recipe.domain.model.MeasurementUnit
+import com.diaszano.pratoo.recipe.domain.model.Tag
 import com.diaszano.pratoo.ui.shared.ErrorState
 import com.diaszano.pratoo.ui.shared.LoadingState
 import com.diaszano.pratoo.ui.theme.LocalAppColors
@@ -313,6 +314,7 @@ fun RecipeEditScreen(
                             onToggleTag = viewModel::onToggleTag,
                             onNewTagNameChange = viewModel::onNewTagNameChange,
                             onAddNewTag = viewModel::onAddNewTag,
+                            onDeleteTag = viewModel::onDeleteTag,
                         )
                     }
 
@@ -812,7 +814,10 @@ private fun TagsSection(
     onToggleTag: (Long) -> Unit,
     onNewTagNameChange: (String) -> Unit,
     onAddNewTag: () -> Unit,
+    onDeleteTag: (Long) -> Unit,
 ) {
+    var tagPendingDelete by remember { mutableStateOf<Tag?>(null) }
+
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         Text(
             text = stringResource(R.string.tags_label),
@@ -827,11 +832,26 @@ private fun TagsSection(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 uiState.allTags.forEach { tag ->
-                    FilterChip(
-                        selected = tag.id in uiState.selectedTagIds,
-                        onClick = { onToggleTag(tag.id) },
-                        label = { Text(tag.name) },
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    ) {
+                        FilterChip(
+                            selected = tag.id in uiState.selectedTagIds,
+                            onClick = { onToggleTag(tag.id) },
+                            label = { Text(tag.name) },
+                        )
+                        IconButton(
+                            onClick = { tagPendingDelete = tag },
+                            modifier = Modifier.size(40.dp),
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                stringResource(R.string.delete_tag),
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -861,6 +881,43 @@ private fun TagsSection(
             }
         }
     }
+
+    tagPendingDelete?.let { tag ->
+        ConfirmDeleteTagDialog(
+            tagName = tag.name,
+            onConfirm = {
+                tagPendingDelete = null
+                onDeleteTag(tag.id)
+            },
+            onDismiss = { tagPendingDelete = null },
+        )
+    }
+}
+
+@Composable
+private fun ConfirmDeleteTagDialog(
+    tagName: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.delete_tag_title)) },
+        text = { Text(stringResource(R.string.delete_tag_message, tagName)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(R.string.delete),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable

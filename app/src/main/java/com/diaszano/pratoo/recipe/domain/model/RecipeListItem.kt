@@ -7,4 +7,5 @@ data class RecipeListItem(
     val imageUri: String? = null,
     val isFavorite: Boolean = false,
     val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )

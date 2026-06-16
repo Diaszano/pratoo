@@ -3,6 +3,7 @@ package com.diaszano.pratoo.di
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.diaszano.pratoo.recipe.adapter.out.backup.JsonRecipeBackupCodec
 import com.diaszano.pratoo.recipe.adapter.out.persistence.RoomRecipeRepository
@@ -43,9 +44,18 @@ object DatabaseModule {
     ): AppDatabase =
         Room
             .databaseBuilder(context, AppDatabase::class.java, "pratoo.db")
+            .addMigrations(MIGRATION_1_2)
             .addCallback(SeedCallback())
             .fallbackToDestructiveMigration(false)
             .build()
+
+    private val MIGRATION_1_2 =
+        object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE recipes ADD COLUMN deleted_at INTEGER")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_recipes_deleted_at ON recipes(deleted_at)")
+            }
+        }
 
     /**
      * Database callback that seeds reference data (measurement categories and units)

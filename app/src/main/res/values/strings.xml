@@ -12,8 +12,9 @@
     <string name="empty_search_title">Nada por aqui</string>
     <string name="empty_search_message">Tente buscar por outro nome ou remover os filtros ativos.</string>
     <string name="delete">Excluir</string>
-    <string name="delete_recipe_title">Excluir receita</string>
-    <string name="delete_recipe_message">Tem certeza que deseja excluir esta receita? Esta ação não pode ser desfeita.</string>
+    <string name="delete_recipe_title">Mover para a lixeira</string>
+    <string name="delete_recipe_message">A receita ficará na lixeira por 30 dias antes de ser removida automaticamente.</string>
+    <string name="move_to_trash">Mover para lixeira</string>
     <string name="cancel">Cancelar</string>
     <string name="confirm">Confirmar</string>
     <string name="edit">Editar</string>
@@ -60,7 +61,7 @@
     <string name="recipe_photo_placeholder">Foto da receita não adicionada</string>
     <string name="remove">Remover</string>
     <string name="title_required">Título *</string>
-    <string name="recipe_deleted">Receita excluída</string>
+    <string name="recipe_deleted">Receita movida para a lixeira</string>
     <string name="save_recipe">Salvar receita</string>
     <string name="saving_recipe">Salvando receita…</string>
     <string name="recipe_save_error">Não foi possível salvar a receita. Tente novamente.</string>
@@ -89,6 +90,18 @@
     <string name="add_to_favorites">Adicionar aos favoritos</string>
     <string name="remove_from_favorites">Remover dos favoritos</string>
     <string name="selected_filter">Filtro selecionado: %1$s</string>
+    <string name="trash">Lixeira</string>
+    <string name="trash_empty_title">Lixeira vazia</string>
+    <string name="trash_empty_message">Receitas excluídas ficam aqui por 30 dias.</string>
+    <string name="trash_recipe_auto_delete">Será removida automaticamente após 30 dias na lixeira.</string>
+    <string name="restore_recipe">Restaurar receita</string>
+    <string name="delete_recipe_permanently">Excluir receita definitivamente</string>
+    <string name="delete_recipe_permanently_title">Excluir definitivamente?</string>
+    <string name="delete_recipe_permanently_message">A receita “%1$s” será removida de vez. Esta ação não pode ser desfeita.</string>
+    <string name="delete_permanently">Excluir definitivamente</string>
+    <string name="delete_tag">Excluir tag</string>
+    <string name="delete_tag_title">Excluir tag?</string>
+    <string name="delete_tag_message">A tag “%1$s” será removida das receitas e da lista de tags.</string>
 
     <!-- Validation -->
     <string name="recipe_title_required">Informe o nome da receita.</string>

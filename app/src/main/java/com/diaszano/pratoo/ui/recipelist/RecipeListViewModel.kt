@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.diaszano.pratoo.recipe.application.usecase.DeleteRecipeUseCase
 import com.diaszano.pratoo.recipe.application.usecase.ObserveTagsUseCase
+import com.diaszano.pratoo.recipe.application.usecase.PurgeExpiredDeletedRecipesUseCase
 import com.diaszano.pratoo.recipe.application.usecase.SearchRecipesUseCase
 import com.diaszano.pratoo.recipe.application.usecase.ToggleFavoriteUseCase
 import com.diaszano.pratoo.recipe.domain.model.RecipeListItem
@@ -35,6 +36,7 @@ class RecipeListViewModel
         searchRecipes: SearchRecipesUseCase,
         observeTags: ObserveTagsUseCase,
         private val deleteRecipe: DeleteRecipeUseCase,
+        private val purgeExpiredDeletedRecipes: PurgeExpiredDeletedRecipesUseCase,
         private val toggleFavorite: ToggleFavoriteUseCase,
     ) : ViewModel() {
         private val _searchQuery = MutableStateFlow("")
@@ -67,6 +69,12 @@ class RecipeListViewModel
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = RecipeListUiState(isLoading = true),
             )
+
+        init {
+            viewModelScope.launch {
+                purgeExpiredDeletedRecipes()
+            }
+        }
 
         fun onSearchQueryChange(query: String) {
             _searchQuery.value = query

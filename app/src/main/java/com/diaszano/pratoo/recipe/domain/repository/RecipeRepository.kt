@@ -12,6 +12,8 @@ interface RecipeRepository {
 
     fun observeFavoriteRecipes(): Flow<List<RecipeListItem>>
 
+    fun observeDeletedRecipes(): Flow<List<RecipeListItem>>
+
     fun searchRecipes(
         query: String?,
         tagId: Long?,
@@ -24,7 +26,14 @@ interface RecipeRepository {
     /** Inserts a new recipe or updates an existing one, replacing its ingredients, steps, and tags atomically. */
     suspend fun saveRecipe(recipe: Recipe): Long
 
+    /** Moves the recipe to trash. Permanent deletion is handled by [deleteRecipePermanently]. */
     suspend fun deleteRecipe(id: Long)
+
+    suspend fun restoreDeletedRecipe(id: Long)
+
+    suspend fun deleteRecipePermanently(id: Long)
+
+    suspend fun deleteDeletedRecipesOlderThan(cutoffMillis: Long)
 
     suspend fun deleteAllRecipes()
 

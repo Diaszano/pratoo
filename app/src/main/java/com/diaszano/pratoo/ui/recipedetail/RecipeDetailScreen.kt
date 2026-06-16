@@ -422,7 +422,7 @@ private fun ConfirmDeleteDialog(
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(
-                    text = stringResource(R.string.delete),
+                    text = stringResource(R.string.move_to_trash),
                     color = MaterialTheme.colorScheme.error,
                 )
             }

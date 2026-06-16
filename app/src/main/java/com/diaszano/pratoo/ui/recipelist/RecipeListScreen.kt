@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterListOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -65,6 +66,7 @@ fun RecipeListScreen(
     onRecipeClick: (Long) -> Unit,
     onAddRecipeClick: () -> Unit,
     onSettingsClick: (() -> Unit)? = null,
+    onTrashClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     viewModel: RecipeListViewModel = hiltViewModel(),
 ) {
@@ -81,6 +83,11 @@ fun RecipeListScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
+                    if (onTrashClick != null) {
+                        IconButton(onClick = onTrashClick) {
+                            Icon(Icons.Default.Delete, stringResource(R.string.trash))
+                        }
+                    }
                     if (onSettingsClick != null) {
                         IconButton(onClick = onSettingsClick) {
                             Icon(Icons.Default.Settings, stringResource(R.string.settings))

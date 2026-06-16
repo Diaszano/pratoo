@@ -12,6 +12,7 @@ import com.diaszano.pratoo.ui.recipedetail.RecipeDetailScreen
 import com.diaszano.pratoo.ui.recipeedit.RecipeEditScreen
 import com.diaszano.pratoo.ui.recipelist.RecipeListScreen
 import com.diaszano.pratoo.ui.settings.SettingsScreen
+import com.diaszano.pratoo.ui.trash.TrashScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -38,6 +39,9 @@ data object SettingsRoute
 @Serializable
 data object BackupSettingsRoute
 
+@Serializable
+data object TrashRoute
+
 @Composable
 fun PratooNavGraph(
     modifier: Modifier = Modifier,
@@ -58,6 +62,9 @@ fun PratooNavGraph(
                 },
                 onSettingsClick = {
                     navController.navigate(SettingsRoute)
+                },
+                onTrashClick = {
+                    navController.navigate(TrashRoute)
                 },
             )
         }
@@ -93,6 +100,11 @@ fun PratooNavGraph(
         }
         composable<BackupSettingsRoute> {
             BackupSettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
+        }
+        composable<TrashRoute> {
+            TrashScreen(
                 onNavigateBack = { navController.popBackStack() },
             )
         }

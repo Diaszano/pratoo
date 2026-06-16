@@ -19,13 +19,14 @@ class FakeRecipeRepository : RecipeRepository {
 
     override fun observeAllRecipes(): Flow<List<RecipeListItem>> =
         recipesFlow.map { list ->
-            list.map {
+            list.filter { it.deletedAt == null }.map {
                 RecipeListItem(
                     id = it.id,
                     title = it.title,
                     imageUri = it.imageUri,
                     isFavorite = it.isFavorite,
                     updatedAt = it.updatedAt,
+                    deletedAt = it.deletedAt,
                 )
             }
         }
@@ -33,7 +34,7 @@ class FakeRecipeRepository : RecipeRepository {
     override fun observeFavoriteRecipes(): Flow<List<RecipeListItem>> =
         recipesFlow.map { list ->
             list
-                .filter { it.isFavorite }
+                .filter { it.isFavorite && it.deletedAt == null }
                 .map {
                     RecipeListItem(
                         id = it.id,
@@ -41,6 +42,23 @@ class FakeRecipeRepository : RecipeRepository {
                         imageUri = it.imageUri,
                         isFavorite = it.isFavorite,
                         updatedAt = it.updatedAt,
+                        deletedAt = it.deletedAt,
+                    )
+                }
+        }
+
+    override fun observeDeletedRecipes(): Flow<List<RecipeListItem>> =
+        recipesFlow.map { list ->
+            list
+                .filter { it.deletedAt != null }
+                .map {
+                    RecipeListItem(
+                        id = it.id,
+                        title = it.title,
+                        imageUri = it.imageUri,
+                        isFavorite = it.isFavorite,
+                        updatedAt = it.updatedAt,
+                        deletedAt = it.deletedAt,
                     )
                 }
         }
@@ -51,6 +69,7 @@ class FakeRecipeRepository : RecipeRepository {
     ): Flow<List<RecipeListItem>> =
         recipesFlow.map { list ->
             list
+                .filter { it.deletedAt == null }
                 .filter { recipe ->
                     val matchesQuery =
                         query.isNullOrBlank() ||
@@ -70,13 +89,14 @@ class FakeRecipeRepository : RecipeRepository {
                         imageUri = it.imageUri,
                         isFavorite = it.isFavorite,
                         updatedAt = it.updatedAt,
+                        deletedAt = it.deletedAt,
                     )
                 }
         }
 
-    override fun observeRecipe(id: Long): Flow<Recipe?> = recipesFlow.map { list -> list.find { it.id == id } }
+    override fun observeRecipe(id: Long): Flow<Recipe?> = recipesFlow.map { list -> list.find { it.id == id && it.deletedAt == null } }
 
-    override suspend fun getRecipe(id: Long): Recipe? = recipes.find { it.id == id }
+    override suspend fun getRecipe(id: Long): Recipe? = recipes.find { it.id == id && it.deletedAt == null }
 
     override suspend fun saveRecipe(recipe: Recipe): Long {
         val id =
@@ -117,6 +137,7 @@ class FakeRecipeRepository : RecipeRepository {
                         )
                     },
                 tags = resolvedTags,
+                deletedAt = recipe.deletedAt,
             )
         recipes.add(savedRecipe)
 
@@ -126,8 +147,36 @@ class FakeRecipeRepository : RecipeRepository {
     }
 
     override suspend fun deleteRecipe(id: Long) {
+        val index = recipes.indexOfFirst { it.id == id && it.deletedAt == null }
+        if (index >= 0) {
+            val deletedAt = System.currentTimeMillis()
+            recipes[index] = recipes[index].copy(deletedAt = deletedAt, updatedAt = deletedAt)
+        }
+        recipesFlow.value = recipes.toList()
+    }
+
+    override suspend fun restoreDeletedRecipe(id: Long) {
+        val index = recipes.indexOfFirst { it.id == id && it.deletedAt != null }
+        if (index >= 0) {
+            recipes[index] = recipes[index].copy(deletedAt = null, updatedAt = System.currentTimeMillis())
+            recipesFlow.value = recipes.toList()
+        }
+    }
+
+    override suspend fun deleteRecipePermanently(id: Long) {
         recipes.removeAll { it.id == id }
         crossRefs.removeAll { it.first == id }
+        recipesFlow.value = recipes.toList()
+    }
+
+    override suspend fun deleteDeletedRecipesOlderThan(cutoffMillis: Long) {
+        val deletedRecipeIds =
+            recipes
+                .filter { recipe -> recipe.deletedAt?.let { it <= cutoffMillis } == true }
+                .map { it.id }
+                .toSet()
+        recipes.removeAll { it.id in deletedRecipeIds }
+        crossRefs.removeAll { it.first in deletedRecipeIds }
         recipesFlow.value = recipes.toList()
     }
 
@@ -167,10 +216,15 @@ class FakeRecipeRepository : RecipeRepository {
 
     override suspend fun deleteTag(id: Long) {
         tags.removeAll { it.id == id }
+        crossRefs.removeAll { it.second == id }
+        recipes.indices.forEach { index ->
+            recipes[index] = recipes[index].copy(tags = recipes[index].tags.filterNot { it.id == id })
+        }
+        recipesFlow.value = recipes.toList()
         tagsFlow.value = tags.toList()
     }
 
-    override suspend fun getAllRecipes(): List<Recipe> = recipes.toList()
+    override suspend fun getAllRecipes(): List<Recipe> = recipes.filter { it.deletedAt == null }.toList()
 
     override fun observeMeasurementUnits(): Flow<List<MeasurementUnit>> = MutableStateFlow(emptyList())
 }

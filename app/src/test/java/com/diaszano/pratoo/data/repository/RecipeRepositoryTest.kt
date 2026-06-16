@@ -13,6 +13,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.TimeUnit
 
 class RecipeRepositoryTest {
     private lateinit var repository: FakeRecipeRepository
@@ -154,6 +155,49 @@ class RecipeRepositoryTest {
 
             repository.deleteRecipe(id)
             assertEquals(null, repository.getRecipe(id))
+            assertEquals(1, repository.observeDeletedRecipes().first().size)
+            assertEquals(0, repository.observeAllRecipes().first().size)
+        }
+
+    @Test
+    fun `restore deleted recipe returns it to active list`() =
+        runTest {
+            val id = repository.saveRecipe(createRecipe(title = "To Restore"))
+
+            repository.deleteRecipe(id)
+            repository.restoreDeletedRecipe(id)
+
+            assertNotNull(repository.getRecipe(id))
+            assertEquals(1, repository.observeAllRecipes().first().size)
+            assertEquals(0, repository.observeDeletedRecipes().first().size)
+        }
+
+    @Test
+    fun `delete recipe permanently removes it from trash`() =
+        runTest {
+            val id = repository.saveRecipe(createRecipe(title = "To Remove Forever"))
+
+            repository.deleteRecipe(id)
+            repository.deleteRecipePermanently(id)
+
+            assertEquals(null, repository.getRecipe(id))
+            assertEquals(0, repository.observeDeletedRecipes().first().size)
+        }
+
+    @Test
+    fun `purge deleted recipes older than cutoff removes expired trash`() =
+        runTest {
+            val now = System.currentTimeMillis()
+            val expiredDeletedAt = now - TimeUnit.DAYS.toMillis(31)
+            val retainedDeletedAt = now - TimeUnit.DAYS.toMillis(10)
+            repository.saveRecipe(createRecipe(title = "Expired").copy(deletedAt = expiredDeletedAt))
+            repository.saveRecipe(createRecipe(title = "Retained").copy(deletedAt = retainedDeletedAt))
+
+            repository.deleteDeletedRecipesOlderThan(now - TimeUnit.DAYS.toMillis(30))
+
+            val trash = repository.observeDeletedRecipes().first()
+            assertEquals(1, trash.size)
+            assertEquals("Retained", trash[0].title)
         }
 
     @Test
@@ -199,5 +243,20 @@ class RecipeRepositoryTest {
             val saved = repository.getRecipe(id)
             assertNotNull(saved)
             assertEquals(2, saved!!.tags.size)
+        }
+
+    @Test
+    fun `delete tag removes it from saved recipes`() =
+        runTest {
+            val tagId = repository.createTag("Sobremesa")
+            val tag = repository.getTagByName("Sobremesa")!!
+            val recipeId = repository.saveRecipe(createRecipe().copy(tags = listOf(tag)))
+
+            repository.deleteTag(tagId)
+
+            val saved = repository.getRecipe(recipeId)
+            assertNotNull(saved)
+            assertEquals(0, saved!!.tags.size)
+            assertEquals(0, repository.observeAllTags().first().size)
         }
 }

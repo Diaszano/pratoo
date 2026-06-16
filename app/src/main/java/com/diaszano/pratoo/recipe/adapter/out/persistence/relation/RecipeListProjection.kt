@@ -6,4 +6,5 @@ data class RecipeListProjection(
     val imageUri: String?,
     val isFavorite: Boolean,
     val updatedAt: Long,
+    val deletedAt: Long?,
 )
