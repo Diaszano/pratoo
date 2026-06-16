@@ -72,6 +72,7 @@ import com.diaszano.pratoo.ui.theme.LocalAppColors
 import com.diaszano.pratoo.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Suppress("LocalContextGetResourceValueCall")
 @Composable
 fun RecipeDetailScreen(
     onNavigateBack: () -> Unit,
