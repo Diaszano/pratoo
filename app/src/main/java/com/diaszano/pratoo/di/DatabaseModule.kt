@@ -98,7 +98,7 @@ object DatabaseModule {
             categories.forEach { category ->
                 db.execSQL(
                     "INSERT OR IGNORE INTO measurement_categories (code, display_name, sort_order) VALUES (?, ?, ?)",
-                    arrayOf<Any>(category.code, category.displayName, category.sortOrder),
+                    arrayOf<Any?>(category.code, category.displayName, category.sortOrder),
                 )
             }
         }
@@ -112,7 +112,7 @@ object DatabaseModule {
                     INSERT OR IGNORE INTO measurement_units (abbreviation, displayName, category_id)
                     SELECT ?, ?, id FROM measurement_categories WHERE code = ?
                     """.trimIndent(),
-                    arrayOf(abbreviation, displayName, categoryCode),
+                    arrayOf<Any?>(abbreviation, displayName, categoryCode),
                 )
             }
         }
