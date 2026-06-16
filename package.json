@@ -1,0 +1,10 @@
+{
+  "name": "pratoo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "App Android de receitas pessoais",
+  "devDependencies": {
+    "semantic-release": "^25.0.5",
+    "@semantic-release/exec": "^7.0.3"
+  }
+}
