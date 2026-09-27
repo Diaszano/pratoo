@@ -102,7 +102,7 @@ dependencies {
     implementation(libs.hilt.work)
 
     // Override kotlin-metadata-jvm for Hilt compatibility with Kotlin 2.4
-    ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.10")
+    ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.20")
 
     // Navigation
     implementation(libs.navigation.compose)
